@@ -1,9 +1,8 @@
 import json
-import os
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Update, Message, CallbackQuery
+from aiogram.types import TelegramObject, Message, CallbackQuery
 import structlog
 
 logger = structlog.get_logger()
@@ -21,8 +20,10 @@ def load_translations() -> None:
 
 
 def get_text(lang: str, key: str, **kwargs) -> str:
-    translations = _translations.get(lang) or _translations.get("en", {})
-    text = translations.get(key) or _translations.get("en", {}).get(key, key)
+    # اول از fa.json، سپس en.json، آخر key رو برمی‌گردونه
+    lang_dict = _translations.get(lang) or {}
+    en_dict = _translations.get("en") or {}
+    text = lang_dict.get(key) or en_dict.get(key) or key
     if kwargs:
         try:
             text = text.format(**kwargs)
@@ -38,18 +39,23 @@ class I18nMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        user = data.get("event_from_user")
         lang = "en"
+        user = data.get("event_from_user")
 
         if user:
             db_user = data.get("db_user")
-            if db_user and db_user.language:
-                lang = db_user.language
+            if db_user is not None:
+                # زبان ذخیره‌شده در DB را بخوان
+                user_lang = getattr(db_user, "language", None)
+                if user_lang and user_lang in _translations:
+                    lang = user_lang
+                else:
+                    # اگه زبان کاربر تلگرام در ترجمه‌ها هست استفاده کن
+                    tg_lang = (getattr(user, "language_code", None) or "en")[:2]
+                    lang = tg_lang if tg_lang in _translations else "en"
             else:
-                tg_lang = getattr(user, "language_code", None) or "en"
-                lang = tg_lang[:2] if tg_lang else "en"
-                if lang not in _translations:
-                    lang = "en"
+                tg_lang = (getattr(user, "language_code", None) or "en")[:2]
+                lang = tg_lang if tg_lang in _translations else "en"
 
         def _(key: str, **kwargs) -> str:
             return get_text(lang, key, **kwargs)
