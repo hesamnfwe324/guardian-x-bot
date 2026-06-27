@@ -16,12 +16,9 @@ from bot.services.achievement_service import seed_achievements
 
 logger = structlog.get_logger()
 
-_bot_ready = False
-
 
 async def health_handler(request):
-    status = "ok" if _bot_ready else "starting"
-    return web.Response(text=status, status=200)
+    return web.Response(text="OK", status=200)
 
 
 async def run_health_server():
@@ -37,23 +34,39 @@ async def run_health_server():
     return runner
 
 
+async def setup_database_with_retry(retries=5, delay=3):
+    for attempt in range(1, retries + 1):
+        try:
+            await create_tables()
+            logger.info("Database tables created successfully")
+            return True
+        except Exception as e:
+            logger.warning(f"DB setup attempt {attempt}/{retries} failed", error=str(e))
+            if attempt < retries:
+                await asyncio.sleep(delay)
+    logger.error("All DB setup attempts failed — bot will run without DB")
+    return False
+
+
 async def on_startup(bot: Bot) -> None:
-    global _bot_ready
     logger.info("Bot starting up", environment=settings.ENVIRONMENT)
 
     try:
         load_translations()
+        logger.info("Translations loaded")
     except Exception as e:
         logger.error("Failed to load translations", error=str(e))
 
-    try:
-        await create_tables()
-        from bot.database.connection import async_session_maker
-        async with async_session_maker() as session:
-            await seed_achievements(session)
-        logger.info("Database setup complete")
-    except Exception as e:
-        logger.error("Database setup failed - continuing without DB", error=str(e))
+    db_ok = await setup_database_with_retry()
+
+    if db_ok:
+        try:
+            from bot.database.connection import async_session_maker
+            async with async_session_maker() as session:
+                await seed_achievements(session)
+            logger.info("Achievements seeded")
+        except Exception as e:
+            logger.warning("Could not seed achievements", error=str(e))
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -61,16 +74,15 @@ async def on_startup(bot: Bot) -> None:
     except Exception as e:
         logger.error("Failed to clear webhook", error=str(e))
 
-    _bot_ready = True
-    logger.info("Bot is ready")
+    logger.info("Bot startup complete", db_ready=db_ok)
 
 
 async def on_shutdown(bot: Bot, runner) -> None:
     logger.info("Bot shutting down")
     try:
         await close_db()
-    except Exception as e:
-        logger.error("Error closing DB", error=str(e))
+    except Exception:
+        pass
     await runner.cleanup()
     logger.info("Shutdown complete")
 
@@ -81,7 +93,6 @@ async def main() -> None:
     if settings.SENTRY_DSN:
         import sentry_sdk
         sentry_sdk.init(dsn=settings.SENTRY_DSN, environment=settings.ENVIRONMENT)
-        logger.info("Sentry initialized")
 
     runner = await run_health_server()
 
