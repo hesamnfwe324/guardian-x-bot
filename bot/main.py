@@ -16,9 +16,12 @@ from bot.services.achievement_service import seed_achievements
 
 logger = structlog.get_logger()
 
+_bot_ready = False
+
 
 async def health_handler(request):
-    return web.Response(text="OK", status=200)
+    status = "ok" if _bot_ready else "starting"
+    return web.Response(text=status, status=200)
 
 
 async def run_health_server():
@@ -35,21 +38,39 @@ async def run_health_server():
 
 
 async def on_startup(bot: Bot) -> None:
+    global _bot_ready
     logger.info("Bot starting up", environment=settings.ENVIRONMENT)
-    load_translations()
-    await create_tables()
 
-    from bot.database.connection import async_session_maker
-    async with async_session_maker() as session:
-        await seed_achievements(session)
+    try:
+        load_translations()
+    except Exception as e:
+        logger.error("Failed to load translations", error=str(e))
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    logger.info("Polling mode — webhook cleared")
+    try:
+        await create_tables()
+        from bot.database.connection import async_session_maker
+        async with async_session_maker() as session:
+            await seed_achievements(session)
+        logger.info("Database setup complete")
+    except Exception as e:
+        logger.error("Database setup failed - continuing without DB", error=str(e))
+
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("Polling mode — webhook cleared")
+    except Exception as e:
+        logger.error("Failed to clear webhook", error=str(e))
+
+    _bot_ready = True
+    logger.info("Bot is ready")
 
 
 async def on_shutdown(bot: Bot, runner) -> None:
     logger.info("Bot shutting down")
-    await close_db()
+    try:
+        await close_db()
+    except Exception as e:
+        logger.error("Error closing DB", error=str(e))
     await runner.cleanup()
     logger.info("Shutdown complete")
 
@@ -85,6 +106,8 @@ async def main() -> None:
         )
     except asyncio.CancelledError:
         pass
+    except Exception as e:
+        logger.error("Polling crashed", error=str(e))
 
     await on_shutdown(bot, runner)
 
