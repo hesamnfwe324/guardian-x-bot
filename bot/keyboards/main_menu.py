@@ -23,13 +23,13 @@ def language_selection_kb() -> InlineKeyboardMarkup:
 
 def main_menu_kb(_: Callable) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    # ردیف ۱ — محافظت
+    # ردیف ۱ — محافظت و مدیریت
     builder.button(text=_("btn_security"),    callback_data="menu:security")
     builder.button(text=_("btn_moderation"),  callback_data="menu:moderation")
-    # ردیف ۲ — اقتصاد
+    # ردیف ۲ — اقتصاد و جوایز
     builder.button(text=_("btn_economy"),     callback_data="menu:economy")
     builder.button(text=_("btn_rewards"),     callback_data="menu:rewards")
-    # ردیف ۳ — اجتماعی
+    # ردیف ۳ — سطح و اعتبار
     builder.button(text=_("btn_levels"),      callback_data="menu:levels")
     builder.button(text=_("btn_reputation"),  callback_data="menu:reputation")
     # ردیف ۴ — بازی‌ها
@@ -43,7 +43,9 @@ def main_menu_kb(_: Callable) -> InlineKeyboardMarkup:
     builder.button(text=_("btn_settings"),    callback_data="menu:settings")
     builder.button(text=_("btn_language"),    callback_data="menu:language")
     builder.button(text=_("btn_help"),        callback_data="menu:help")
-    builder.adjust(2, 2, 2, 3, 2, 3)
+    # ردیف ۷ — پشتیبانی (تمام عرض)
+    builder.button(text=_("btn_support"), url="https://t.me/VPS24H")
+    builder.adjust(2, 2, 2, 3, 2, 3, 1)
     return builder.as_markup()
 
 
