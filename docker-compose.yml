@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    container_name: guardian_bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-guardian_x_secret}
+      - WEBHOOK_PORT=8080
+      - DATABASE_URL=postgresql+asyncpg://guardian:guardian_pass@postgres:5432/guardian_db
+      - REDIS_URL=redis://redis:6379/0
+      - BOT_OWNER_ID=${BOT_OWNER_ID:-0}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - guardian_network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: guardian_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: guardian_db
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_pass
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - guardian_network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian -d guardian_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: guardian_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-guardianredis}
+    volumes:
+      - redis_data:/data
+    networks:
+      - guardian_network
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build: .
+    container_name: guardian_migrate
+    command: python scripts/migrate.py
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://guardian:guardian_pass@postgres:5432/guardian_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - guardian_network
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  guardian_network:
+    driver: bridge
