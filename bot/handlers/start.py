@@ -3,8 +3,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot.keyboards.main_menu import language_selection_kb, main_menu_kb
-from bot.services.user_service import set_user_language
 from bot.config import settings
+from bot.middlewares.i18n import get_text
 import structlog
 
 logger = structlog.get_logger()
@@ -12,25 +12,20 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, _: callable, db_session=None, db_user=None, lang: str = "en", **kwargs):
+async def cmd_start(message: Message, _: callable, db_session: AsyncSession = None, db_user=None, lang: str = "en"):
     if message.chat.type != "private":
         return
 
-    args = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else ""
-    if args.startswith("ref_") and db_session and db_user:
-        try:
-            referrer_id = int(args[4:])
-            if referrer_id != message.from_user.id:
-                from bot.services.economy_service import process_referral
-                rewarded = await process_referral(
-                    db_session,
-                    referrer_id=referrer_id,
-                    new_user_id=db_user.id,
-                )
-                if rewarded:
-                    logger.info("Referral reward granted", new_user=message.from_user.id, referrer=referrer_id)
-        except Exception:
-            logger.warning("Failed to process referral", args=args)
+    if db_session and db_user:
+        args = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else ""
+        if args.startswith("ref_"):
+            try:
+                referrer_id = int(args[4:])
+                if referrer_id != message.from_user.id:
+                    from bot.services.economy_service import process_referral
+                    await process_referral(db_session, referrer_id=referrer_id, new_user_id=db_user.id)
+            except Exception:
+                pass
 
     await message.answer(
         _("select_language"),
@@ -39,27 +34,35 @@ async def cmd_start(message: Message, _: callable, db_session=None, db_user=None
 
 
 @router.callback_query(F.data.startswith("lang:"))
-async def set_language(callback: CallbackQuery, _: callable, lang: str = "en", db_session=None, db_user=None, **kwargs):
+async def set_language(callback: CallbackQuery, db_session: AsyncSession = None, db_user=None, _: callable = None, lang: str = "en"):
     selected_lang = callback.data.split(":")[1]
     if selected_lang not in settings.SUPPORTED_LANGUAGES:
-        await callback.answer("Invalid language", show_alert=True)
+        if callable(_):
+            await callback.answer(_("error_generic") if _ else "Invalid language", show_alert=True)
         return
 
+    # ذخیره مستقیم زبان با ORM (بدون raw SQL)
     if db_session and db_user:
-        try:
-            await set_user_language(db_session, callback.from_user.id, selected_lang)
-            db_user.language = selected_lang
-        except Exception as e:
-            logger.warning("Could not save language to DB", error=str(e))
+        db_user.language = selected_lang
+        await db_session.flush()
 
-    from bot.middlewares.i18n import get_text
     new_ = lambda key, **kw: get_text(selected_lang, key, **kw)
 
-    await callback.message.edit_text(
-        new_("welcome_bot"),
-        reply_markup=main_menu_kb(new_),
-        parse_mode="HTML",
-    )
+    name = callback.from_user.first_name or "کاربر"
+    welcome_text = new_("welcome_bot").replace("{name}", name) if "{name}" in new_("welcome_bot") else new_("welcome_bot")
+
+    try:
+        await callback.message.edit_text(
+            welcome_text,
+            reply_markup=main_menu_kb(new_),
+            parse_mode="HTML",
+        )
+    except Exception:
+        await callback.message.answer(
+            welcome_text,
+            reply_markup=main_menu_kb(new_),
+            parse_mode="HTML",
+        )
     await callback.answer(new_("language_set"))
 
 
@@ -85,29 +88,38 @@ async def change_language(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "menu:channel")
 async def channel_info(callback: CallbackQuery, _: callable, **kwargs):
     from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(
+    text = (
+        "📢 <b>کانال رسمی گاردیان X</b>\n\n"
+        "آخرین اخبار، بروزرسانی‌ها و اطلاعیه‌ها را دنبال کنید!\n\n"
+        "🔔 همین الان عضو شوید: @VPS24H"
+    ) if kwargs.get("lang") == "fa" else (
         "📢 <b>Official Channel</b>\n\n"
-        "Stay updated with Guardian X news, updates and announcements!\n\n"
-        "🔔 Join our channel to get the latest features and tips.",
-        reply_markup=back_button_kb(_),
-        parse_mode="HTML",
+        "Follow us for the latest news and updates!\n\n"
+        "🔔 Join now: @VPS24H"
     )
+    await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
     await callback.answer()
 
 
 @router.callback_query(F.data == "menu:tournaments")
 async def tournaments_menu(callback: CallbackQuery, _: callable, **kwargs):
     from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(
+    text = (
+        "🏆 <b>تورنمنت‌ها</b>\n\n"
+        "🚧 <b>به زودی!</b>\n\n"
+        "با گروه‌های دیگر رقابت کنید!\n"
+        "• 🎮 تورنمنت بازی‌ها\n"
+        "• ⚔️ قهرمانی مبارزه\n"
+        "• 🏅 جوایز و پاداش‌ها"
+    ) if kwargs.get("lang") == "fa" else (
         "🏆 <b>Tournaments</b>\n\n"
         "🚧 <b>Coming Soon!</b>\n\n"
-        "Compete with other groups in exciting tournaments!\n"
+        "Compete with other groups!\n"
         "• 🎮 Game tournaments\n"
-        "• ⚡ Duel championships\n"
-        "• 🏅 Prize pools & rewards",
-        reply_markup=back_button_kb(_),
-        parse_mode="HTML",
+        "• ⚔️ Duel championships\n"
+        "• 🏅 Prize pools & rewards"
     )
+    await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
     await callback.answer()
 
 
