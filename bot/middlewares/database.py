@@ -17,54 +17,67 @@ class DatabaseMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        async with async_session_maker() as session:
-            data["db_session"] = session
+        try:
+            async with async_session_maker() as session:
+                data["db_session"] = session
 
-            user = data.get("event_from_user")
-            if user and not user.is_bot:
-                db_user = await self._get_or_create_user(session, user)
-                data["db_user"] = db_user
-
-            chat = None
-            if isinstance(event, Update):
-                if event.message:
-                    chat = event.message.chat
-                elif event.callback_query and event.callback_query.message:
-                    chat = event.callback_query.message.chat
-                elif event.chat_member:
-                    chat = event.chat_member.chat
-                elif event.my_chat_member:
-                    chat = event.my_chat_member.chat
-            elif isinstance(event, Message):
-                chat = event.chat
-            elif isinstance(event, CallbackQuery) and event.message:
-                chat = event.message.chat
-
-            if chat and chat.type in ("group", "supergroup"):
-                db_group = await self._get_or_create_group(session, chat)
-                data["db_group"] = db_group
-
-                security = await session.scalar(
-                    select(SecuritySettings).where(SecuritySettings.group_id == chat.id)
-                )
-                if not security:
-                    security = SecuritySettings(group_id=chat.id)
-                    session.add(security)
-                    await session.commit()
-                    await session.refresh(security)
-                data["group_security"] = security
-
+                user = data.get("event_from_user")
                 if user and not user.is_bot:
-                    member = await self._get_or_create_member(session, chat.id, user.id)
-                    data["db_member"] = member
+                    try:
+                        db_user = await self._get_or_create_user(session, user)
+                        data["db_user"] = db_user
+                    except Exception as e:
+                        logger.warning("Could not get/create user in DB", error=str(e))
 
-            try:
-                result = await handler(event, data)
-                await session.commit()
-                return result
-            except Exception:
-                await session.rollback()
-                raise
+                chat = None
+                if isinstance(event, Update):
+                    if event.message:
+                        chat = event.message.chat
+                    elif event.callback_query and event.callback_query.message:
+                        chat = event.callback_query.message.chat
+                    elif event.chat_member:
+                        chat = event.chat_member.chat
+                    elif event.my_chat_member:
+                        chat = event.my_chat_member.chat
+                elif isinstance(event, Message):
+                    chat = event.chat
+                elif isinstance(event, CallbackQuery) and event.message:
+                    chat = event.message.chat
+
+                if chat and chat.type in ("group", "supergroup"):
+                    try:
+                        db_group = await self._get_or_create_group(session, chat)
+                        data["db_group"] = db_group
+
+                        security = await session.scalar(
+                            select(SecuritySettings).where(SecuritySettings.group_id == chat.id)
+                        )
+                        if not security:
+                            security = SecuritySettings(group_id=chat.id)
+                            session.add(security)
+                            await session.commit()
+                            await session.refresh(security)
+                        data["group_security"] = security
+
+                        if user and not user.is_bot:
+                            member = await self._get_or_create_member(session, chat.id, user.id)
+                            data["db_member"] = member
+                    except Exception as e:
+                        logger.warning("Could not load group data from DB", error=str(e))
+
+                try:
+                    result = await handler(event, data)
+                    await session.commit()
+                    return result
+                except Exception:
+                    await session.rollback()
+                    raise
+
+        except Exception as db_err:
+            logger.error("DB session failed — running handler without DB", error=str(db_err))
+            data["db_session"] = None
+            data["db_user"] = None
+            return await handler(event, data)
 
     async def _get_or_create_user(self, session: AsyncSession, tg_user) -> User:
         user = await session.get(User, tg_user.id)
