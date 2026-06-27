@@ -15,12 +15,9 @@ def help_kb(_) -> object:
     builder.button(text=_("btn_help_moderation"), callback_data="help:moderation")
     builder.button(text=_("btn_help_economy"), callback_data="help:economy")
     builder.button(text=_("btn_help_games"), callback_data="help:games")
-    builder.button(text="🎮 Games List", callback_data="help:gameslist")
-    builder.button(text="⚔️ Duels & Tournaments", callback_data="help:duels")
-    builder.button(text="🏆 Achievements", callback_data="help:achievements")
-    builder.button(text="📋 All Commands", callback_data="help:commands")
     builder.button(text=_("btn_back"), callback_data="menu:main")
-    builder.adjust(2, 2, 2, 1, 1)
+    builder.button(text=_("btn_support"), url="https://t.me/VPS24H")
+    builder.adjust(2, 2, 1, 1)
     return builder.as_markup()
 
 
@@ -73,18 +70,18 @@ async def help_games(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "help:gameslist")
 async def help_gameslist(callback: CallbackQuery, _: callable, **kwargs):
     text = (
-        "🎮 <b>Available Games</b>\n\n"
-        "1️⃣ 🎲 <b>Smart Dice</b> — 10 modes: Classic, Prediction, Lucky Multiplier, Best of 3/5, Tournament, Group Battle, Daily Challenge, Streak, VIP Arena\n\n"
-        "2️⃣ 🧠 <b>Quiz Battle AI</b> — Answer trivia questions to win coins and XP\n\n"
-        "3️⃣ 🗺️ <b>Treasure Hunt</b> — Find hidden treasures before others\n\n"
-        "4️⃣ 🎡 <b>Lucky Wheel</b> — Spin the wheel for multiplier rewards\n\n"
-        "5️⃣ 🃏 <b>Card Battle</b> — Classic card game with betting\n\n"
-        "6️⃣ 🔢 <b>Number War</b> — Higher number wins the round\n\n"
-        "7️⃣ ✊ <b>Rock Paper Scissors Arena</b> — Classic RPS with wagers\n\n"
-        "8️⃣ 💣 <b>Mines Challenge</b> — Reveal tiles, avoid mines\n\n"
-        "9️⃣ ♟️ <b>Chess Mini</b> — Quick chess battles\n\n"
-        "🔟 🎰 <b>Safe Russian Roulette</b> — Thrill without real risk\n\n"
-        "All games support: PvP • Coin Betting • Rankings • Statistics • Achievements"
+        "🎮 <b>لیست بازی‌ها</b>\n━━━━━━━━━━━━\n\n"
+        "1️⃣ 🎲 <b>تاس هوشمند</b> — چندین حالت مختلف\n"
+        "2️⃣ 🧠 <b>کوئیز هوش</b> — سوالات فارسی + XP\n"
+        "3️⃣ 🗺️ <b>شکار گنج</b> — پاداش تصادفی\n"
+        "4️⃣ 🎡 <b>چرخ شانس</b> — ضریب‌های جذاب\n"
+        "5️⃣ 🃏 <b>نبرد کارت</b> — کارت بالاتر برنده\n"
+        "6️⃣ 🔢 <b>نبرد اعداد</b> — عدد بزرگ‌تر برنده\n"
+        "7️⃣ ✊ <b>سنگ کاغذ قیچی</b> — کلاسیک!\n"
+        "8️⃣ 💣 <b>مین‌یاب</b> — خانه‌ها رو کشف کن\n"
+        "9️⃣ ♟️ <b>شطرنج سریع</b> — مهره‌ها می‌جنگند\n"
+        "🔟 🎰 <b>رولت</b> — شانست رو امتحان کن\n\n"
+        "🎯 همه بازی‌ها: سکه • XP • آمار • رتبه‌بندی"
     )
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:help"))
     await callback.answer()
@@ -93,17 +90,17 @@ async def help_gameslist(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "help:duels")
 async def help_duels(callback: CallbackQuery, _: callable, **kwargs):
     text = (
-        "⚔️ <b>Duels & Tournaments</b>\n\n"
-        "<b>Duels:</b>\n"
-        "• Challenge any user with /duel @user [wager]\n"
-        "• Loser's wager goes to the winner\n"
-        "• Track your duel history and stats\n"
-        "• Win streak bonuses available\n\n"
-        "<b>Tournaments:</b>\n"
-        "• Automatic & Scheduled tournaments\n"
-        "• Entry fee creates the prize pool\n"
-        "• Bracket system for fair competition\n"
-        "• Top 3 receive rewards and rankings boost"
+        "⚔️ <b>مبارزه و تورنمنت</b>\n━━━━━━━━━━━━\n\n"
+        "<b>مبارزه:</b>\n"
+        "• با /duel @user [شرط] به مبارزه دعوت کنید\n"
+        "• بازنده شرط را از دست می‌دهد\n"
+        "• آمار مبارزات ذخیره می‌شود\n"
+        "• ریسه پیروزی پاداش ویژه دارد\n\n"
+        "<b>تورنمنت:</b>\n"
+        "• تورنمنت‌های خودکار و برنامه‌ریزی شده\n"
+        "• حق شرکت = جایزه\n"
+        "• سیستم حذفی عادلانه\n"
+        "• ۳ نفر اول جوایز ویژه می‌گیرند"
     )
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:help"))
     await callback.answer()
@@ -112,14 +109,14 @@ async def help_duels(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "help:achievements")
 async def help_achievements(callback: CallbackQuery, _: callable, **kwargs):
     text = (
-        "🏅 <b>Achievement System</b>\n\n"
-        "100+ achievements across 5 categories:\n\n"
-        "🎮 <b>Games</b> — Win games, hit streaks, master specific games\n"
-        "💰 <b>Economy</b> — Accumulate coins, spend wisely, bank milestones\n"
-        "📊 <b>Activity</b> — Send messages, claim daily rewards, reach levels\n"
-        "🤝 <b>Community</b> — Invite friends, give reputation, participate\n"
-        "🎪 <b>Events</b> — Join tournaments, complete seasonal challenges\n\n"
-        "Each achievement grants: Coins + XP + Achievement Points"
+        "🏅 <b>سیستم دستاوردها</b>\n━━━━━━━━━━━━\n\n"
+        "بیش از ۱۰۰ دستاورد در ۵ دسته:\n\n"
+        "🎮 <b>بازی‌ها</b> — بُرد، ریسه، تخصص\n"
+        "💰 <b>اقتصاد</b> — پس‌انداز، هزینه، رکوردها\n"
+        "📊 <b>فعالیت</b> — پیام، جوایز، سطح\n"
+        "🤝 <b>جامعه</b> — دعوت، اعتبار، مشارکت\n"
+        "🎪 <b>رویدادها</b> — تورنمنت، چالش‌های فصلی\n\n"
+        "هر دستاورد: سکه + XP + امتیاز دستاورد"
     )
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:help"))
     await callback.answer()
@@ -128,29 +125,24 @@ async def help_achievements(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "help:commands")
 async def help_commands(callback: CallbackQuery, _: callable, **kwargs):
     text = (
-        "📋 <b>All Commands</b>\n\n"
-        "<b>Moderation (Admin only):</b>\n"
-        "/ban @user [reason] — Ban user\n"
-        "/unban @user — Unban user\n"
-        "/kick @user — Kick user\n"
-        "/mute @user [time] — Mute user\n"
-        "/unmute @user — Unmute user\n"
-        "/warn @user [reason] — Warn user\n"
-        "/unwarn @user — Remove warning\n"
-        "/warns @user — View warnings\n"
-        "/note @user <text> — Add note\n"
-        "/history @user — View history\n\n"
-        "<b>Economy:</b>\n"
-        "/balance or /wallet — Check balance\n"
-        "/daily — Claim daily reward\n\n"
-        "<b>Games:</b>\n"
-        "/duel @user [wager] — Challenge to duel\n\n"
-        "<b>General:</b>\n"
-        "/start — Start the bot\n"
-        "/menu — Open main menu\n"
-        "/help — Show this help\n"
-        "/lock — Manage content locks\n"
-        "/setwelcome — Set welcome message"
+        "📋 <b>همه دستورات</b>\n━━━━━━━━━━━━\n\n"
+        "<b>مدیریت (فقط ادمین):</b>\n"
+        "/ban @user — بن دائم\n"
+        "/unban @user — رفع بن\n"
+        "/kick @user — اخراج\n"
+        "/mute @user — بی‌صدا\n"
+        "/unmute @user — رفع بی‌صدا\n"
+        "/warn @user — اخطار\n"
+        "/warns @user — مشاهده اخطارها\n\n"
+        "<b>اقتصاد:</b>\n"
+        "/balance یا /wallet — موجودی\n"
+        "/daily — جایزه روزانه\n\n"
+        "<b>بازی:</b>\n"
+        "/duel @user [شرط] — مبارزه\n\n"
+        "<b>عمومی:</b>\n"
+        "/start — شروع ربات\n"
+        "/menu — منوی اصلی\n"
+        "/help — راهنما"
     )
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:help"))
     await callback.answer()
