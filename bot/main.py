@@ -1,5 +1,7 @@
 import asyncio
+import os
 import structlog
+from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -15,6 +17,23 @@ from bot.services.achievement_service import seed_achievements
 logger = structlog.get_logger()
 
 
+async def health_handler(request):
+    return web.Response(text="OK", status=200)
+
+
+async def run_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    app = web.Application()
+    app.router.add_get("/health", health_handler)
+    app.router.add_get("/", health_handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info("Health check server started", port=port)
+    return runner
+
+
 async def on_startup(bot: Bot) -> None:
     logger.info("Bot starting up", environment=settings.ENVIRONMENT)
     load_translations()
@@ -28,9 +47,10 @@ async def on_startup(bot: Bot) -> None:
     logger.info("Polling mode — webhook cleared")
 
 
-async def on_shutdown(bot: Bot) -> None:
+async def on_shutdown(bot: Bot, runner) -> None:
     logger.info("Bot shutting down")
     await close_db()
+    await runner.cleanup()
     logger.info("Shutdown complete")
 
 
@@ -41,6 +61,8 @@ async def main() -> None:
         import sentry_sdk
         sentry_sdk.init(dsn=settings.SENTRY_DSN, environment=settings.ENVIRONMENT)
         logger.info("Sentry initialized")
+
+    runner = await run_health_server()
 
     storage = MemoryStorage()
     bot = Bot(
@@ -64,7 +86,7 @@ async def main() -> None:
     except asyncio.CancelledError:
         pass
 
-    await on_shutdown(bot)
+    await on_shutdown(bot, runner)
 
 
 if __name__ == "__main__":
