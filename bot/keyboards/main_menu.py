@@ -64,3 +64,11 @@ def nav_kb(_: Callable, back_cb: str = "menu:main", refresh_cb: str = None) -> I
     else:
         builder.adjust(2)
     return builder.as_markup()
+
+
+def confirm_cancel_kb(_: Callable, confirm_cb: str, cancel_cb: str = 'menu:main') -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_('btn_confirm'), callback_data=confirm_cb)
+    builder.button(text=_('btn_cancel'), callback_data=cancel_cb)
+    builder.adjust(2)
+    return builder.as_markup()
