@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
-from bot.keyboards.games import dice_menu_kb
+from bot.keyboards.games import dice_menu_kb, rps_choice_kb, wheel_spin_kb
 from bot.services.game_service import play_classic_dice, spin_wheel, play_rps
 from bot.services.user_service import get_or_create_game_stats
 from bot.utils.helpers import format_number
@@ -20,25 +20,13 @@ class GameStates(StatesGroup):
     waiting_dice_bet = State()
 
 
-# ─── /games ───────────────────────────────────────────────
+# ──── /games ────────────────────────────────────────────────────
 @router.message(Command('games'))
 async def cmd_games(message: Message, _: callable, **kwargs):
-    text = (
-        '🎮 <b>بازی‌های موجود:</b>\n\n'
-        '/dice — 🎲 تاس هوشمند\n'
-        '/rps — ✊ سنگ کاغذ قیچی\n'
-        '/quiz — 🧠 کوئیز هوش\n'
-        '/wheel — 🎡 چرخ شانس\n'
-        '/numwar — 🔢 نبرد اعداد\n'
-        '/cards — 🃏 نبرد کارت\n'
-        '/treasure — 💎 شکار گنج\n'
-        '/mines — 💣 مین‌یاب\n'
-        '/roulette — 🎰 رولت'
-    )
-    await message.answer(text, parse_mode='HTML')
+    await message.answer(_('games_menu'), reply_markup=dice_menu_kb(_), parse_mode='HTML')
 
 
-# ─── /dice ────────────────────────────────────────────────
+# ──── /dice ──────────────────────────────────────────────────────
 @router.message(Command('dice'))
 async def cmd_dice(message: Message, _: callable, **kwargs):
     await message.answer(_('dice_menu'), reply_markup=dice_menu_kb(_), parse_mode='HTML')
@@ -49,7 +37,7 @@ async def play_dice(callback: CallbackQuery, _: callable, db_session=None, db_us
     mode = callback.data.split('dice:', 1)[1]
 
     if db_user is None or db_session is None:
-        await callback.answer('❌ لطفاً /start بزنید.', show_alert=True)
+        await callback.answer(_('error_generic'), show_alert=True)
         return
 
     if mode == 'classic':
@@ -69,7 +57,11 @@ async def play_dice(callback: CallbackQuery, _: callable, db_session=None, db_us
     dice_emoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
     p = dice_emoji[result['player_roll'] - 1]
     b = dice_emoji[result['opponent_roll'] - 1]
-    text = f'🎲 <b>تاس</b>\n━━━━━━━━━━━━\n\nشما: {p} <b>{result["player_roll"]}</b>  vs  ربات: {b} <b>{result["opponent_roll"]}</b>\n\n'
+    text = (
+        f"🎲 <b>{_('dice_menu').split(chr(10))[0].replace('╗', '').replace('┌', '').strip()}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{_('btn_game_dice')}: {p} <b>{result['player_roll']}</b>  vs  🤖: {b} <b>{result['opponent_roll']}</b>\n\n"
+    )
     if result['result'] == 'win':
         text += _('game_won').format(amount=format_number(result['winnings']))
     elif result['result'] == 'lose':
@@ -90,7 +82,7 @@ async def process_dice_bet(message: Message, _: callable, db_session=None, db_us
         await message.reply(_('invalid_amount'))
         return
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         if state:
             await state.clear()
         return
@@ -103,7 +95,11 @@ async def process_dice_bet(message: Message, _: callable, db_session=None, db_us
     dice_emoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
     p = dice_emoji[result['player_roll'] - 1]
     b = dice_emoji[result['opponent_roll'] - 1]
-    text = f'🎲 <b>نتیجه تاس</b>\n━━━━━━━━━━━━\n\nشما: {p} <b>{result["player_roll"]}</b>  vs  ربات: {b} <b>{result["opponent_roll"]}</b>\n\n'
+    text = (
+        f"🎲 <b>{_('dice_menu').split(chr(10))[0].replace('╗', '').replace('┌', '').strip()}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{_('btn_game_dice')}: {p} <b>{result['player_roll']}</b>  vs  🤖: {b} <b>{result['opponent_roll']}</b>\n\n"
+    )
     if result['result'] == 'win':
         text += _('game_won').format(amount=format_number(result['winnings']))
     elif result['result'] == 'lose':
@@ -115,40 +111,44 @@ async def process_dice_bet(message: Message, _: callable, db_session=None, db_us
         await state.clear()
 
 
-# ─── /wheel ───────────────────────────────────────────────
+# ──── /wheel ────────────────────────────────────────────────────
 @router.message(Command('wheel'))
 async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
-    segments = [('💀 باخت', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
+    segments = [('💀', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
     probs = [0.30, 0.05, 0.20, 0.25, 0.15, 0.03, 0.02]
     rand = random.random()
     cumulative = 0.0
-    chosen_label, chosen_mult = '💀 باخت', 0
+    chosen_label, chosen_mult = '💀', 0
     for i, prob in enumerate(probs):
         cumulative += prob
         if rand <= cumulative:
             chosen_label, chosen_mult = segments[i]
             break
     spin_animation = '🎡 ' + ' → '.join([s[0] for s in random.sample(segments, 4)]) + f' → <b>{chosen_label}</b>'
-    outcome = '💀 باختید!' if chosen_mult == 0 else f'🎉 ضریب <b>{chosen_label}</b>!'
-    text = f'🎡 <b>چرخ شانس</b>\n━━━━━━━━━━━━\n\n{spin_animation}\n\nنتیجه: {chosen_label}\n\n{outcome}'
+    if chosen_mult == 0:
+        outcome = _('game_lost').format(amount=0)
+    else:
+        outcome = _('game_won').format(amount=chosen_mult)
+    text = (
+        f"🎡 <b>{_('btn_game_wheel')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{spin_animation}\n\n"
+        f"{'🎯' if chosen_mult > 0 else '💀'} {chosen_label}\n\n"
+        f"{outcome}"
+    )
     await message.answer(text, parse_mode='HTML')
 
 
-# ─── /rps ─────────────────────────────────────────────────
+# ──── /rps ───────────────────────────────────────────────────────
 @router.message(Command('rps'))
 async def cmd_rps(message: Message, _: callable, **kwargs):
-    builder = InlineKeyboardBuilder()
-    builder.button(text='🪨 ◈ سنگ', callback_data='rps:0:rock')
-    builder.button(text='📄 ◈ کاغذ', callback_data='rps:0:paper')
-    builder.button(text='✂️ ◈ قیچی', callback_data='rps:0:scissors')
-    builder.adjust(3)
     await message.answer(
-        '✊ <b>سنگ کاغذ قیچی</b>\n━━━━━━━━━━━━\n\nانتخاب خود را بزنید!',
+        f"✊ <b>{_('btn_game_rps')}</b>\n━━━━━━━━━━━━\n\n{_('rps_choose')}",
         parse_mode='HTML',
-        reply_markup=builder.as_markup(),
+        reply_markup=rps_choice_kb(_, match_id=0),
     )
 
 
@@ -157,35 +157,40 @@ async def process_rps(callback: CallbackQuery, _: callable, db_session=None, db_
     parts = callback.data.split(':')
     player_choice = parts[2] if len(parts) > 2 else 'rock'
     if db_user is None or db_session is None:
-        await callback.answer('❌ لطفاً /start بزنید.', show_alert=True)
+        await callback.answer(_('error_generic'), show_alert=True)
         return
     result = await play_rps(db_session, db_user.id, player_choice, wager=0)
-    emojis = {'rock': '🪨 سنگ', 'paper': '📄 کاغذ', 'scissors': '✂️ قیچی'}
+    emojis = {'rock': _('btn_rock'), 'paper': _('btn_paper'), 'scissors': _('btn_scissors')}
     p_e = emojis.get(result['player_choice'], '❓')
     b_e = emojis.get(result['bot_choice'], '❓')
     if result['result'] == 'win':
-        outcome = '🎉 <b>بردید!</b>'
+        outcome = _('game_won').format(amount=0)
     elif result['result'] == 'lose':
-        outcome = '😔 <b>باختید!</b>'
+        outcome = _('game_lost').format(amount=0)
     else:
-        outcome = '🤝 <b>مساوی!</b>'
-    text = f'✊ <b>سنگ کاغذ قیچی</b>\n━━━━━━━━━━━━\n\nشما: {p_e}\nربات: {b_e}\n\n{outcome}'
+        outcome = _('game_draw')
+    text = (
+        f"✊ <b>{_('btn_game_rps')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"👤: {p_e}\n🤖: {b_e}\n\n"
+        f"{outcome}"
+    )
     await callback.message.edit_text(text, parse_mode='HTML')
     await callback.answer()
 
 
-# ─── /quiz ────────────────────────────────────────────────
+# ──── /quiz ──────────────────────────────────────────────────────
 QUIZ_QUESTIONS = [
-    ('پایتخت ایران کدام شهر است؟', ['تهران', 'مشهد', 'اصفهان', 'شیراز'], 0),
-    ('۷ × ۸ چند است؟', ['۵۴', '۵۶', '۶۴', '۴۸'], 1),
-    ('کره زمین به دور خورشید در چند روز می‌گردد؟', ['۳۶۵', '۳۶۰', '۳۵۵', '۳۷۰'], 0),
-    ('بزرگ‌ترین اقیانوس جهان کدام است؟', ['اطلس', 'هند', 'آرام', 'منجمد شمالی'], 2),
-    ('کدام عنصر سازنده اصلی آب است؟', ['اکسیژن', 'هیدروژن', 'نیتروژن', 'کربن'], 1),
-    ('چند ساعت در یک روز وجود دارد؟', ['۱۲', '۲۰', '۲۴', '۴۸'], 2),
-    ('سریع‌ترین حیوان جهان کدام است؟', ['شیر', 'یوزپلنگ', 'عقاب', 'اسب'], 1),
-    ('اختراع تلفن به چه کسی نسبت داده می‌شود؟', ['ادیسون', 'گراهام بل', 'نیوتن', 'مارکونی'], 1),
-    ('۱۰۰ × ۱۰۰ چند است؟', ['۱۰۰۰', '۱۰۰۰۰', '۱۰۰۰۰۰', '۱۰۰'], 1),
-    ('در شطرنج وزیر چگونه حرکت می‌کند؟', ['مثل رخ', 'مثل اسب', 'در همه جهات', 'مورب'], 2),
+    ("❓ What is 7 × 8?", ['54', '56', '64', '48'], 1),
+    ("❓ How many hours in a day?", ['12', '20', '24', '48'], 2),
+    ("❓ What is 100 × 100?", ['1000', '10000', '100000', '100'], 1),
+    ("❓ What is the chemical symbol for water?", ['H2O', 'CO2', 'NaCl', 'O2'], 0),
+    ("❓ Which planet is closest to the Sun?", ['Venus', 'Mercury', 'Earth', 'Mars'], 1),
+    ("❓ What is the speed of light approximately?", ['300 km/s', '300,000 km/s', '30,000 km/s', '3,000 km/s'], 1),
+    ("❓ How many continents are there?", ['5', '6', '7', '8'], 2),
+    ("❓ What year did World War II end?", ['1943', '1944', '1945', '1946'], 2),
+    ("❓ What is √144?", ['10', '11', '12', '14'], 2),
+    ("❓ Which element has atomic number 1?", ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], 1),
 ]
 
 
@@ -197,7 +202,7 @@ async def cmd_quiz(message: Message, _: callable, **kwargs):
         builder.button(text=opt, callback_data=f'quiz_ans:{correct}:{i}')
     builder.adjust(2, 2)
     await message.answer(
-        f'🧠 <b>کوئیز هوش</b>\n━━━━━━━━━━━━\n\n❓ {q_text}',
+        f"🧠 <b>{_('btn_game_quiz')}</b>\n━━━━━━━━━━━━\n\n{q_text}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )
@@ -210,20 +215,20 @@ async def quiz_answer(callback: CallbackQuery, _: callable, db_session=None, db_
     chosen = int(parts[2])
     is_correct = correct == chosen
     if is_correct:
-        await callback.answer('✅ آفرین! جواب درسته! +20 XP', show_alert=True)
+        await callback.answer(_('quiz_correct'), show_alert=True)
         if db_session and db_user:
             from bot.services.user_service import add_xp
             await add_xp(db_session, db_user.id, 20)
     else:
-        await callback.answer('❌ اشتباه! جواب درست بود گزینه دیگری!', show_alert=True)
+        await callback.answer(_('quiz_wrong'), show_alert=True)
     await callback.message.edit_reply_markup(reply_markup=None)
 
 
-# ─── /numwar ──────────────────────────────────────────────
+# ──── /numwar ────────────────────────────────────────────────────
 @router.message(Command('numwar'))
 async def cmd_numwar(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
     player_num = random.randint(1, 100)
     bot_num = random.randint(1, 100)
@@ -240,11 +245,17 @@ async def cmd_numwar(message: Message, _: callable, db_session=None, db_user=Non
         icon = '🤝'
     p_bar = '█' * (player_num // 10) + '░' * (10 - player_num // 10)
     b_bar = '█' * (bot_num // 10) + '░' * (10 - bot_num // 10)
-    text = f'🔢 <b>نبرد اعداد</b>\n━━━━━━━━━━━━\n\nشما:  <b>{player_num}</b> [{p_bar}]\nربات: <b>{bot_num}</b> [{b_bar}]\n\n{icon} {result_text}'
+    text = (
+        f"🔢 <b>{_('btn_game_numwar')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"👤:  <b>{player_num}</b> [{p_bar}]\n"
+        f"🤖: <b>{bot_num}</b> [{b_bar}]\n\n"
+        f"{icon} {result_text}"
+    )
     await message.answer(text, parse_mode='HTML')
 
 
-# ─── /cards ───────────────────────────────────────────────
+# ──── /cards ─────────────────────────────────────────────────────
 CARD_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 CARD_SUITS = ['♠️', '♥️', '♦️', '♣️']
 
@@ -256,7 +267,7 @@ def random_card():
 @router.message(Command('cards'))
 async def cmd_cards(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
     p_rank, p_suit = random_card()
     b_rank, b_suit = random_card()
@@ -273,36 +284,47 @@ async def cmd_cards(message: Message, _: callable, db_session=None, db_user=None
     else:
         result_text = _('game_draw')
         icon = '🤝'
-    text = f'🃏 <b>نبرد کارت</b>\n━━━━━━━━━━━━\n\nشما:  {p_suit} <b>{p_rank}</b>\nربات: {b_suit} <b>{b_rank}</b>\n\n{icon} {result_text}'
+    text = (
+        f"🃏 <b>{_('btn_game_cards')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"👤:  {p_suit} <b>{p_rank}</b>\n"
+        f"🤖: {b_suit} <b>{b_rank}</b>\n\n"
+        f"{icon} {result_text}"
+    )
     await message.answer(text, parse_mode='HTML')
 
 
-# ─── /treasure ────────────────────────────────────────────
+# ──── /treasure ──────────────────────────────────────────────────
 @router.message(Command('treasure'))
 async def cmd_treasure(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
     spots = ['💎', '💎', '💣', '💣', '💣', '💎', '💣', '💣', '💎']
     random.shuffle(spots)
     chosen = random.choice(spots)
     if chosen == '💎':
         reward = random.randint(30, 150)
-        result_text = f'🎉 گنج پیدا کردید! +{reward} سکه'
+        result_text = _('treasure_found').format(amount=reward)
         from bot.services.economy_service import add_coins
         await add_coins(db_session, db_user.id, reward, 'game_win', 'Treasure hunt win')
     else:
-        result_text = '💣 بمب! بدشانسی آوردید!'
+        result_text = _('treasure_bomb')
     reveal = ' '.join(spots[:5])
-    text = f'💎 <b>شکار گنج</b>\n━━━━━━━━━━━━\n\n{reveal}\n\n{result_text}'
+    text = (
+        f"💎 <b>{_('btn_game_treasure')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{reveal}\n\n"
+        f"{result_text}"
+    )
     await message.answer(text, parse_mode='HTML')
 
 
-# ─── /mines ───────────────────────────────────────────────
+# ──── /mines ─────────────────────────────────────────────────────
 @router.message(Command('mines'))
 async def cmd_mines(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
     grid = ['💣'] * 3 + ['💰'] * 6
     random.shuffle(grid)
@@ -310,19 +332,24 @@ async def cmd_mines(message: Message, _: callable, db_session=None, db_user=None
     chosen = grid[chosen_idx]
     if chosen == '💰':
         reward = random.randint(20, 100)
-        result_text = f'🎉 مسیر امن! +{reward} سکه'
+        result_text = _('mines_safe').format(amount=reward)
         from bot.services.economy_service import add_coins
         await add_coins(db_session, db_user.id, reward, 'game_win', 'Mines win')
     else:
-        result_text = '💥 مین! باختید!'
+        result_text = _('mines_boom')
     display = grid[:3]
     display[chosen_idx % 3] = chosen
     row = ' '.join(display)
-    text = f'💣 <b>مین‌یاب</b>\n━━━━━━━━━━━━\n\n{row}\n\n{result_text}'
+    text = (
+        f"💣 <b>{_('btn_game_mines')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{row}\n\n"
+        f"{result_text}"
+    )
     await message.answer(text, parse_mode='HTML')
 
 
-# ─── /roulette ────────────────────────────────────────────
+# ──── /roulette ──────────────────────────────────────────────────
 ROULETTE_NUMBERS = list(range(37))
 ROULETTE_RED = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
 
@@ -330,12 +357,12 @@ ROULETTE_RED = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 3
 @router.message(Command('roulette'))
 async def cmd_roulette(message: Message, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    builder.button(text='🔴 ◈ قرمز (+1.9x)', callback_data='roulette:red:0')
-    builder.button(text='⚫ ◈ سیاه (+1.9x)', callback_data='roulette:black:0')
-    builder.button(text='🟢 ◈ صفر (+35x)', callback_data='roulette:zero:0')
+    builder.button(text=_('roulette_red').format(mult='1.9×'), callback_data='roulette:red:0')
+    builder.button(text=_('roulette_black').format(mult='1.9×'), callback_data='roulette:black:0')
+    builder.button(text=_('roulette_zero').format(mult='35×'), callback_data='roulette:zero:0')
     builder.adjust(2, 1)
     await message.answer(
-        '🎰 <b>رولت</b>\n━━━━━━━━━━━━\n\nنوع شرط‌بندی خود را انتخاب کنید:',
+        f"🎰 <b>{_('btn_game_roulette')}</b>\n━━━━━━━━━━━━\n\n{_('roulette_choose')}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )
@@ -346,38 +373,265 @@ async def process_roulette(callback: CallbackQuery, _: callable, db_session=None
     parts = callback.data.split(':')
     bet_type = parts[1]
     if db_user is None or db_session is None:
-        await callback.answer('❌ لطفاً /start بزنید.', show_alert=True)
+        await callback.answer(_('error_generic'), show_alert=True)
         return
     spin = random.choice(ROULETTE_NUMBERS)
     is_red = spin in ROULETTE_RED
     is_zero = spin == 0
-    result_color = '🟢 صفر' if is_zero else ('🔴 قرمز' if is_red else '⚫ سیاه')
-    if (bet_type == 'red' and is_red) or (bet_type == 'black' and not is_red and not is_zero):
-        result_text = '🎉 بردید! (+1.9x)'
-    elif bet_type == 'zero' and is_zero:
-        result_text = '💰 جک‌پات! (+35x)'
+    if is_zero:
+        result_color = _('roulette_zero_label')
+    elif is_red:
+        result_color = _('roulette_red_label')
     else:
-        result_text = '😔 باختید!'
-    text = f'🎰 <b>رولت</b>\n━━━━━━━━━━━━\n\n🔮 عدد: <b>{spin}</b> — {result_color}\n\n{result_text}'
+        result_color = _('roulette_black_label')
+
+    if (bet_type == 'red' and is_red) or (bet_type == 'black' and not is_red and not is_zero):
+        result_text = _('roulette_win').format(mult='1.9×')
+    elif bet_type == 'zero' and is_zero:
+        result_text = _('roulette_jackpot').format(mult='35×')
+    else:
+        result_text = _('roulette_lose')
+    text = (
+        f"🎰 <b>{_('btn_game_roulette')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"🔮 {_('roulette_number')}: <b>{spin}</b> — {result_color}\n\n"
+        f"{result_text}"
+    )
     await callback.message.edit_text(text, parse_mode='HTML')
     await callback.answer()
 
 
-# ─── /stats ───────────────────────────────────────────────
+# ──── /stats ─────────────────────────────────────────────────────
 @router.message(Command('stats', 'gstats'))
 async def cmd_stats(message: Message, _: callable, db_session=None, db_user=None, **kwargs):
     if db_user is None or db_session is None:
-        await message.reply('❌ لطفاً /start بزنید.')
+        await message.reply(_('error_generic'))
         return
     stats = await get_or_create_game_stats(db_session, db_user.id)
     wins = stats.total_wins or 0
     losses = stats.total_losses or 0
     draws = (stats.total_games or 0) - wins - losses
     text = (
-        f'📊 <b>آمار بازی‌های شما</b>\n━━━━━━━━━━━━\n\n'
-        f'🏆 برد‌ها: <b>{wins}</b>\n'
-        f'💀 باخت‌ها: <b>{losses}</b>\n'
-        f'🤝 مساوی‌ها: <b>{max(0, draws)}</b>\n'
-        f'💰 کل برده: <b>{format_number(stats.total_coins_won or 0)}</b>'
+        f"📊 <b>{_('game_stats_title')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"🏆 {_('wins_label')}: <b>{wins}</b>\n"
+        f"💀 {_('losses_label')}: <b>{losses}</b>\n"
+        f"🤝 {_('draws_label')}: <b>{max(0, draws)}</b>\n"
+        f"💰 {_('total_coins_label')}: <b>{format_number(stats.total_coins_won or 0)}</b>"
     )
     await message.answer(text, parse_mode='HTML')
+
+
+# ═══════════════════════════════════════════════════════════════
+# GAME MENU CALLBACK HANDLERS — Make inline buttons fully functional
+# ═══════════════════════════════════════════════════════════════
+
+@router.callback_query(F.data == "game:dice")
+async def game_dice(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.message.edit_text(_('dice_menu'), reply_markup=dice_menu_kb(_), parse_mode='HTML')
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:quiz")
+async def game_quiz(callback: CallbackQuery, _: callable, **kwargs):
+    q_text, options, correct = random.choice(QUIZ_QUESTIONS)
+    builder = InlineKeyboardBuilder()
+    for i, opt in enumerate(options):
+        builder.button(text=opt, callback_data=f'quiz_ans:{correct}:{i}')
+    builder.adjust(2, 2)
+    await callback.message.edit_text(
+        f"🧠 <b>{_('btn_game_quiz')}</b>\n━━━━━━━━━━━━\n\n{q_text}",
+        parse_mode='HTML',
+        reply_markup=builder.as_markup(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:treasure")
+async def game_treasure(callback: CallbackQuery, _: callable, db_session=None, db_user=None, **kwargs):
+    if db_user is None or db_session is None:
+        await callback.answer(_('error_generic'), show_alert=True)
+        return
+    spots = ['💎', '💎', '💣', '💣', '💣', '💎', '💣', '💣', '💎']
+    random.shuffle(spots)
+    chosen = random.choice(spots)
+    if chosen == '💎':
+        reward = random.randint(30, 150)
+        result_text = _('treasure_found').format(amount=reward)
+        from bot.services.economy_service import add_coins
+        await add_coins(db_session, db_user.id, reward, 'game_win', 'Treasure hunt win')
+    else:
+        result_text = _('treasure_bomb')
+    reveal = ' '.join(spots[:5])
+    text = (
+        f"💎 <b>{_('btn_game_treasure')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{reveal}\n\n"
+        f"{result_text}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:treasure"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:wheel")
+async def game_wheel(callback: CallbackQuery, _: callable, db_session=None, db_user=None, **kwargs):
+    if db_user is None or db_session is None:
+        await callback.answer(_('error_generic'), show_alert=True)
+        return
+    segments = [('💀', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
+    probs = [0.30, 0.05, 0.20, 0.25, 0.15, 0.03, 0.02]
+    rand = random.random()
+    cumulative = 0.0
+    chosen_label, chosen_mult = '💀', 0
+    for i, prob in enumerate(probs):
+        cumulative += prob
+        if rand <= cumulative:
+            chosen_label, chosen_mult = segments[i]
+            break
+    spin_animation = '🎡 ' + ' → '.join([s[0] for s in random.sample(segments, 4)]) + f' → <b>{chosen_label}</b>'
+    if chosen_mult == 0:
+        outcome = _('game_lost').format(amount=0)
+    else:
+        outcome = _('game_won').format(amount=chosen_mult)
+    text = (
+        f"🎡 <b>{_('btn_game_wheel')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{spin_animation}\n\n"
+        f"{'🎯' if chosen_mult > 0 else '💀'} {chosen_label}\n\n"
+        f"{outcome}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:wheel"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:cards")
+async def game_cards(callback: CallbackQuery, _: callable, db_session=None, db_user=None, **kwargs):
+    if db_user is None or db_session is None:
+        await callback.answer(_('error_generic'), show_alert=True)
+        return
+    p_rank, p_suit = random_card()
+    b_rank, b_suit = random_card()
+    p_val = CARD_RANKS.index(p_rank)
+    b_val = CARD_RANKS.index(b_rank)
+    if p_val > b_val:
+        result_text = _('game_won').format(amount=40)
+        icon = '🏆'
+        from bot.services.economy_service import add_coins
+        await add_coins(db_session, db_user.id, 40, 'game_win', 'Card game win')
+    elif p_val < b_val:
+        result_text = _('game_lost').format(amount=0)
+        icon = '💀'
+    else:
+        result_text = _('game_draw')
+        icon = '🤝'
+    text = (
+        f"🃏 <b>{_('btn_game_cards')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"👤:  {p_suit} <b>{p_rank}</b>\n"
+        f"🤖: {b_suit} <b>{b_rank}</b>\n\n"
+        f"{icon} {result_text}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:cards"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:numwar")
+async def game_numwar(callback: CallbackQuery, _: callable, db_session=None, db_user=None, **kwargs):
+    if db_user is None or db_session is None:
+        await callback.answer(_('error_generic'), show_alert=True)
+        return
+    player_num = random.randint(1, 100)
+    bot_num = random.randint(1, 100)
+    if player_num > bot_num:
+        result_text = _('game_won').format(amount=50)
+        icon = '🏆'
+        from bot.services.economy_service import add_coins
+        await add_coins(db_session, db_user.id, 50, 'game_win', 'Number War win')
+    elif player_num < bot_num:
+        result_text = _('game_lost').format(amount=0)
+        icon = '💀'
+    else:
+        result_text = _('game_draw')
+        icon = '🤝'
+    p_bar = '█' * (player_num // 10) + '░' * (10 - player_num // 10)
+    b_bar = '█' * (bot_num // 10) + '░' * (10 - bot_num // 10)
+    text = (
+        f"🔢 <b>{_('btn_game_numwar')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"👤:  <b>{player_num}</b> [{p_bar}]\n"
+        f"🤖: <b>{bot_num}</b> [{b_bar}]\n\n"
+        f"{icon} {result_text}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:numwar"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:rps")
+async def game_rps(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.message.edit_text(
+        f"👊 <b>{_('btn_game_rps')}</b>\n━━━━━━━━━━━━\n\n{_('rps_choose')}",
+        parse_mode='HTML',
+        reply_markup=rps_choice_kb(_, match_id=0),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:mines")
+async def game_mines(callback: CallbackQuery, _: callable, db_session=None, db_user=None, **kwargs):
+    if db_user is None or db_session is None:
+        await callback.answer(_('error_generic'), show_alert=True)
+        return
+    grid = ['💣'] * 3 + ['💰'] * 6
+    random.shuffle(grid)
+    chosen_idx = random.randint(0, 8)
+    chosen = grid[chosen_idx]
+    if chosen == '💰':
+        reward = random.randint(20, 100)
+        result_text = _('mines_safe').format(amount=reward)
+        from bot.services.economy_service import add_coins
+        await add_coins(db_session, db_user.id, reward, 'game_win', 'Mines win')
+    else:
+        result_text = _('mines_boom')
+    display = grid[:3]
+    display[chosen_idx % 3] = chosen
+    row = ' '.join(display)
+    text = (
+        f"💣 <b>{_('btn_game_mines')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{row}\n\n"
+        f"{result_text}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:mines"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:chess")
+async def game_chess(callback: CallbackQuery, _: callable, **kwargs):
+    text = (
+        f"♟️ <b>{_('btn_game_chess')}</b>\n"
+        f"━━━━━━━━━━━━\n\n"
+        f"{_('feature_coming')}"
+    )
+    from bot.keyboards.main_menu import nav_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:games", "game:chess"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "game:roulette")
+async def game_roulette(callback: CallbackQuery, _: callable, **kwargs):
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_('roulette_red').format(mult='1.9×'), callback_data='roulette:red:0')
+    builder.button(text=_('roulette_black').format(mult='1.9×'), callback_data='roulette:black:0')
+    builder.button(text=_('roulette_zero').format(mult='35×'), callback_data='roulette:zero:0')
+    builder.adjust(2, 1)
+    await callback.message.edit_text(
+        f"🎰 <b>{_('btn_game_roulette')}</b>\n━━━━━━━━━━━━\n\n{_('roulette_choose')}",
+        parse_mode='HTML',
+        reply_markup=builder.as_markup(),
+    )
+    await callback.answer()
