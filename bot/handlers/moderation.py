@@ -42,7 +42,6 @@ async def get_target_user(message: Message, session: AsyncSession) -> tuple:
     return target, reason
 
 
-@router.callback_query(F.data == "menu:moderation")
 async def moderation_menu(callback: CallbackQuery, _: callable, **kwargs):
     await callback.message.edit_text(
         _("moderation_menu"),
@@ -52,7 +51,6 @@ async def moderation_menu(callback: CallbackQuery, _: callable, **kwargs):
     await callback.answer()
 
 
-@router.callback_query(F.data == "mod:menu")
 async def moderation_menu_back(callback: CallbackQuery, _: callable, **kwargs):
     await callback.message.edit_text(
         _("moderation_menu"),
