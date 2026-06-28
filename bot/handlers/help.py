@@ -11,9 +11,7 @@ router = Router()
 def build_help_text(_: callable) -> str:
     """Build i18n help text using the _() callable."""
     return (
-        f"
         f"  ❓ <b>{_('help_center_title')}</b>\n"
-        
         f"  💰 <b>{_('help_section_economy')}</b>\n"
         f"  /wallet — {_('help_cmd_wallet')}\n"
         f"  /daily — {_('help_cmd_daily')}\n"
@@ -54,7 +52,6 @@ def build_help_text(_: callable) -> str:
         f"  /language — {_('help_cmd_language')}\n"
         f"  /stats — {_('help_cmd_stats')}\n"
         f"  /help — {_('help_cmd_help')}\n\n"
-        
         f"  <i>{_('help_hint')}</i>"
     )
 
