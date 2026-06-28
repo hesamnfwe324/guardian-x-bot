@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, WebAppInfo
 from aiogram.filters import CommandStart, Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -147,3 +147,21 @@ async def cmd_menu(message: Message, _: callable, **kwargs):
         reply_markup=main_menu_kb(_),
         parse_mode="HTML",
     )
+
+  @router.message(Command("panel"))
+  async def cmd_panel(message: Message, _: callable = None, lang: str = "en"):
+      """Open Guardian X Glass Panel Web App."""
+      builder = InlineKeyboardBuilder()
+      builder.button(
+          text="🛡 باز کردن پنل شیشه‌ای" if lang == "fa" else "🛡 Open Glass Panel",
+          web_app=WebAppInfo(url="https://ba8afe95-631e-4585-992e-b0c61a5fac3e-00-29ppkd5wz23h8.janeway.replit.dev")
+      )
+      text = (
+          "🛡 <b>پنل شیشه‌ای Guardian X</b>\n\n"
+          "به پروفایل، کیف پول، لیدربورد و آمار بازی خود دسترسی داشته باشید."
+          if lang == "fa"
+          else "🛡 <b>Guardian X Glass Panel</b>\n\n"
+          "Access your profile, wallet, leaderboard and game stats."
+      )
+      await message.answer(text, reply_markup=builder.as_markup())
+  
