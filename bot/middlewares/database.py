@@ -17,7 +17,6 @@ from typing import Any, Awaitable, Callable, Dict
           event: TelegramObject,
           data: Dict[str, Any],
       ) -> Any:
-          handler_was_called = False
           try:
               async with async_session_maker() as session:
                   data["db_session"] = session
@@ -66,17 +65,23 @@ from typing import Any, Awaitable, Callable, Dict
                       except Exception as e:
                           logger.warning("Could not load group data from DB", error=str(e))
 
-                  handler_was_called = True
-                  result = await handler(event, data)
-                  await session.commit()
-                  return result
+                  try:
+                      result = await handler(event, data)
+                      await session.commit()
+                      return result
+                  except Exception as handler_err:
+                      # رول‌بک session ولی خطا را به dispatcher ببر — handler دوباره اجرا نشود
+                      try:
+                          await session.rollback()
+                      except Exception:
+                          pass
+                      raise handler_err
 
-          except Exception as err:
-              if handler_was_called:
-                  # خطا از handler بود نه از DB — دوباره اجرا نکن
+          except Exception as db_err:
+              # فقط وقتی DB از اول در دسترس نبود handler را بدون DB اجرا کن
+              if data.get("_handler_called"):
                   raise
-              # خطا از اتصال DB بود — بدون DB اجرا کن
-              logger.error("DB session failed — running handler without DB", error=str(err))
+              logger.error("DB session failed — running handler without DB", error=str(db_err))
               data["db_session"] = None
               data["db_user"] = None
               return await handler(event, data)
