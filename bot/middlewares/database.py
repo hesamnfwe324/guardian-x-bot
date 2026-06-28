@@ -29,6 +29,7 @@ class DatabaseMiddleware(BaseMiddleware):
                         data["db_user"] = db_user
                     except Exception as e:
                         logger.warning("Could not get/create user in DB", error=str(e))
+                        data["db_user"] = None
 
                 chat = None
                 if isinstance(event, Update):
@@ -94,8 +95,9 @@ class DatabaseMiddleware(BaseMiddleware):
                 username=tg_user.username,
                 first_name=tg_user.first_name or "User",
                 last_name=tg_user.last_name,
-                is_bot=tg_user.is_bot,
+is_bot=tg_user.is_bot,
                 is_premium=getattr(tg_user, "is_premium", False) or False,
+                telegram_id=tg_user.id,
             )
             session.add(user)
             await session.flush()
