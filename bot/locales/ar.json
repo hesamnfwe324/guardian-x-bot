@@ -328,5 +328,6 @@
   "time_minutes": "دقيقة",
   "loading": "⏳ جارٍ التحميل...",
   "no_data": "📭 لا توجد بيانات.",
-  "page_info": "صفحة {page} من {total}"
+  "page_info": "صفحة {page} من {total}",
+  "btn_support": "💬 الدعم"
 }
