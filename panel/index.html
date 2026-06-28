@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian X — پنل مدیریت</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+
+  <!-- ===== ANIMATED BACKGROUND ===== -->
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="grid-pattern"></div>
+  </div>
+
+  <!-- ===== LOGIN PAGE ===== -->
+  <div id="loginPage" class="login-page">
+    <div class="login-card glass-strong">
+      <div class="login-logo">🛡️</div>
+      <h2 class="login-title">Guardian X</h2>
+      <p class="login-subtitle">پنل مدیریت ربات — ورود با کلید ادمین</p>
+      <div class="login-form">
+        <input type="password" id="adminKeyInput" class="form-input" placeholder="کلید ادمین را وارد کنید" autocomplete="off">
+        <button id="loginBtn" class="btn btn-primary" onclick="doLogin()">
+          🔓 ورود به پنل
+        </button>
+        <div id="loginError" class="login-error">❌ کلید ادمین نادرست است</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="appLayout" class="app-layout hidden">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar glass-strong">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">🛡️</div>
+        <div class="sidebar-brand">
+          <h1>Guardian X</h1>
+          <span>پنل مدیریت حرفه‌ای</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">اصلی</div>
+          <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+            <span class="nav-icon">📊</span>
+            <span>داشبورد</span>
+          </div>
+          <div class="nav-item" data-page="users" onclick="navigateTo('users')">
+            <span class="nav-icon">👥</span>
+            <span>کاربران</span>
+            <span class="nav-badge" id="usersCount">0</span>
+          </div>
+          <div class="nav-item" data-page="groups" onclick="navigateTo('groups')">
+            <span class="nav-icon">🏠</span>
+            <span>گروه‌ها</span>
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">مدیریت</div>
+          <div class="nav-item" data-page="economy" onclick="navigateTo('economy')">
+            <span class="nav-icon">💰</span>
+            <span>اقتصاد</span>
+          </div>
+          <div class="nav-item" data-page="logs" onclick="navigateTo('logs')">
+            <span class="nav-icon">📋</span>
+            <span>لاگ فعالیت‌ها</span>
+          </div>
+          <div class="nav-item" data-page="broadcast" onclick="navigateTo('broadcast')">
+            <span class="nav-icon">📢</span>
+            <span>پیام همگانی</span>
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">سیستم</div>
+          <div class="nav-item" data-page="security" onclick="navigateTo('security')">
+            <span class="nav-icon">🛡️</span>
+            <span>امنیت</span>
+          </div>
+          <div class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span>تنظیمات</span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status">
+          <div class="status-dot"></div>
+          <span>ربات آنلاین</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
+
+      <!-- Top Header -->
+      <header class="top-header glass-subtle">
+        <div class="header-right">
+          <div class="page-title" id="pageTitle">
+            <span class="title-icon">📊</span>
+            <h2>داشبورد</h2>
+          </div>
+        </div>
+        <div class="header-left">
+          <div class="search-box glass">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="جستجو..." id="globalSearch" onkeyup="handleSearch(event)">
+          </div>
+          <div class="header-actions">
+            <button class="header-btn glass" onclick="refreshData()" title="به‌روزرسانی">🔄</button>
+            <button class="header-btn glass" onclick="toggleFullscreen()" title="تمام صفحه">⛶</button>
+            <button class="header-btn glass" onclick="doLogout()" title="خروج">🚪</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area" id="contentArea">
+
+        <!-- ===== DASHBOARD PAGE ===== -->
+        <div id="page-dashboard" class="page-content">
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card glass purple animate-in stagger-1">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value" id="stat-totalUsers">—</div>
+              <div class="stat-label">کل کاربران</div>
+            </div>
+            <div class="stat-card glass green animate-in stagger-2">
+              <div class="stat-icon">✅</div>
+              <div class="stat-value" id="stat-activeToday">—</div>
+              <div class="stat-label">فعال امروز</div>
+            </div>
+            <div class="stat-card glass blue animate-in stagger-3">
+              <div class="stat-icon">🏠</div>
+              <div class="stat-value" id="stat-totalGroups">—</div>
+              <div class="stat-label">کل گروه‌ها</div>
+            </div>
+            <div class="stat-card glass yellow animate-in stagger-4">
+              <div class="stat-icon">💬</div>
+              <div class="stat-value" id="stat-totalMessages">—</div>
+              <div class="stat-label">کل پیام‌ها</div>
+            </div>
+            <div class="stat-card glass red animate-in stagger-5">
+              <div class="stat-icon">⛔</div>
+              <div class="stat-value" id="stat-bannedUsers">—</div>
+              <div class="stat-label">کاربران بن‌شده</div>
+            </div>
+            <div class="stat-card glass pink animate-in stagger-6">
+              <div class="stat-icon">🎮</div>
+              <div class="stat-value" id="stat-gamesPlayed">—</div>
+              <div class="stat-label">بازی‌های انجام شده</div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+            <div class="panel glass">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span class="panel-icon">📈</span>
+                  فعالیت هفتگی
+                </div>
+              </div>
+              <div class="chart-area" id="weeklyChart"></div>
+            </div>
+            <div class="panel glass">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span class="panel-icon">🏆</span>
+                  تاپ لیدربورد
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="navigateTo('economy')">مشاهده همه</button>
+              </div>
+              <div id="dashboardLeaderboard" style="padding:8px 0;"></div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">📋</span>
+                فعالیت‌های اخیر
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('logs')">مشاهده همه</button>
+            </div>
+            <div id="dashboardRecentLogs"></div>
+          </div>
+        </div>
+
+        <!-- ===== USERS PAGE ===== -->
+        <div id="page-users" class="page-content hidden">
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">👥</span>
+                مدیریت کاربران
+              </div>
+              <div class="panel-actions">
+                <input type="text" class="form-input" style="width:200px;padding:7px 12px;font-size:0.8rem;" placeholder="جستجوی کاربر..." id="userSearch" onkeyup="searchUsers()">
+                <select class="form-input" style="width:120px;padding:7px 12px;font-size:0.8rem;" id="userBannedFilter" onchange="searchUsers()">
+                  <option value="">همه</option>
+                  <option value="true">بن‌شده</option>
+                  <option value="false">فعال</option>
+                </select>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>کاربر</th>
+                    <th>موجودی</th>
+                    <th>سطح</th>
+                    <th>XP</th>
+                    <th>زبان</th>
+                    <th>وضعیت</th>
+                    <th>آخرین بازدید</th>
+                    <th>عملیات</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">در حال بارگذاری...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="usersPagination"></div>
+          </div>
+        </div>
+
+        <!-- ===== GROUPS PAGE ===== -->
+        <div id="page-groups" class="page-content hidden">
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">🏠</span>
+                مدیریت گروه‌ها
+              </div>
+              <div class="panel-actions">
+                <input type="text" class="form-input" style="width:200px;padding:7px 12px;font-size:0.8rem;" placeholder="جستجوی گروه..." id="groupSearch" onkeyup="searchGroups()">
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>گروه</th>
+                    <th>نوع</th>
+                    <th>اعضا</th>
+                    <th>زبان</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ ایجاد</th>
+                  </tr>
+                </thead>
+                <tbody id="groupsTableBody">
+                  <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">در حال بارگذاری...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="groupsPagination"></div>
+          </div>
+        </div>
+
+        <!-- ===== ECONOMY PAGE ===== -->
+        <div id="page-economy" class="page-content hidden">
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">💰</span>
+                لیدربورد اقتصاد
+              </div>
+              <div class="stat-label" id="economyTotalLabel" style="color:var(--accent-primary);font-weight:700;font-size:0.9rem;"></div>
+            </div>
+            <div id="leaderboardList">
+              <div class="empty-state">
+                <div class="empty-icon">💰</div>
+                <h3>در حال بارگذاری...</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== LOGS PAGE ===== -->
+        <div id="page-logs" class="page-content hidden">
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">📋</span>
+                لاگ فعالیت‌ها
+              </div>
+              <div class="panel-actions">
+                <input type="text" class="form-input" style="width:160px;padding:7px 12px;font-size:0.8rem;" placeholder="فیلتر اکشن..." id="logActionFilter" onkeyup="searchLogs()">
+              </div>
+            </div>
+            <div id="logsList"></div>
+            <div class="pagination" id="logsPagination"></div>
+          </div>
+        </div>
+
+        <!-- ===== BROADCAST PAGE ===== -->
+        <div id="page-broadcast" class="page-content hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="panel glass">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span class="panel-icon">📢</span>
+                  ارسال پیام همگانی
+                </div>
+              </div>
+              <div style="padding:20px;">
+                <div class="form-group">
+                  <label class="form-label">متن پیام (HTML پشتیبانی می‌شود)</label>
+                  <textarea class="form-input" id="broadcastMsg" rows="6" placeholder="متن پیام خود را وارد کنید..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">نوع پردازش</label>
+                  <select class="form-input" id="broadcastParseMode">
+                    <option value="HTML">HTML</option>
+                    <option value="Markdown">Markdown</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" onclick="sendBroadcast()" style="width:100%;padding:12px;">
+                  📢 ارسال پیام به همه گروه‌ها
+                </button>
+                <div id="broadcastResult" style="margin-top:12px;display:none;" class="glass" style="padding:12px;border-radius:var(--radius-md);"></div>
+              </div>
+            </div>
+
+            <div class="panel glass">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span class="panel-icon">👁️</span>
+                  پیش‌نمایش پیام
+                </div>
+              </div>
+              <div style="padding:20px;">
+                <div class="broadcast-preview glass" id="broadcastPreview">
+                  پیش‌نمایش پیام در اینجا نمایش داده می‌شود...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECURITY PAGE ===== -->
+        <div id="page-security" class="page-content hidden">
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card glass purple">
+              <div class="stat-icon">🛡️</div>
+              <div class="stat-value">فعال</div>
+              <div class="stat-label">ضد اسپم</div>
+            </div>
+            <div class="stat-card glass green">
+              <div class="stat-icon">🤖</div>
+              <div class="stat-value">فعال</div>
+              <div class="stat-label">ضد بات</div>
+            </div>
+            <div class="stat-card glass blue">
+              <div class="stat-icon">🔒</div>
+              <div class="stat-value">فعال</div>
+              <div class="stat-label">ضد لینک</div>
+            </div>
+            <div class="stat-card glass red">
+              <div class="stat-icon">⚠️</div>
+              <div class="stat-value">فعال</div>
+              <div class="stat-label">ضد کلاهبرداری</div>
+            </div>
+          </div>
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">🛡️</span>
+                تنظیمات امنیتی گروه‌ها
+              </div>
+            </div>
+            <div style="padding:24px;text-align:center;color:var(--text-muted);">
+              <p style="font-size:0.9rem;">🔧 تنظیمات امنیتی هر گروه از طریق خود ربات در گروه قابل تغییر است.</p>
+              <p style="font-size:0.8rem;margin-top:8px;">از منوی مرکز امنیت در گروه، تنظیمات ضد اسپم، ضد بات و سایر قابلیت‌ها را فعال/غیرفعال کنید.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SETTINGS PAGE ===== -->
+        <div id="page-settings" class="page-content hidden">
+          <div class="panel glass">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">⚙️</span>
+                تنظیمات پنل
+              </div>
+            </div>
+            <div style="padding:24px;">
+              <div class="form-group">
+                <label class="form-label">کلید ادمین</label>
+                <input type="password" class="form-input" id="settingsAdminKey" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label class="form-label">آدرس سرور</label>
+                <input type="text" class="form-input" id="settingsServerUrl" placeholder="https://guardian-x-bot.onrender.com">
+              </div>
+              <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:8px;">
+                💾 ذخیره تنظیمات
+              </button>
+            </div>
+          </div>
+
+          <div class="panel glass" style="margin-top:16px;">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span class="panel-icon">ℹ️</span>
+                درباره Guardian X
+              </div>
+            </div>
+            <div style="padding:24px;text-align:center;">
+              <div style="font-size:2.5rem;margin-bottom:8px;">🛡️</div>
+              <h3 style="background:linear-gradient(135deg,var(--accent-primary),var(--accent-secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.3rem;font-weight:800;">Guardian X Ultimate</h3>
+              <p style="color:var(--text-muted);font-size:0.82rem;margin-top:4px;">ربات مدیریت و سرگرمی پیشرفته گروه‌های تلگرام</p>
+              <p style="color:var(--text-muted);font-size:0.75rem;margin-top:12px;">نسخه ۱.۰.۰ — پنل شیشه‌ای</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST CONTAINER ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== MODAL ===== -->
+  <div id="modalContainer"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
