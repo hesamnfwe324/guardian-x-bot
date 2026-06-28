@@ -268,14 +268,15 @@ import json
               logs = result.scalars().all()
               log_list = []
               for log in logs:
+                  details = log.details or {}
                   log_list.append({
                       "id": log.id,
                       "action": log.action,
-                      "performedBy": str(log.performed_by),
-                      "targetId": str(log.target_id) if log.target_id else "",
-                      "groupId": str(log.group_id),
-                      "reason": log.reason,
-                      "details": log.details,
+                      "performedBy": str(log.admin_id) if log.admin_id else "system",
+                      "targetId": str(log.user_id) if log.user_id else "",
+                      "groupId": str(log.group_id) if log.group_id else "",
+                      "reason": details.get("reason") if isinstance(details, dict) else None,
+                      "details": str(details) if details else None,
                       "createdAt": log.created_at.isoformat() if log.created_at else None,
                   })
               return web.json_response({
