@@ -88,15 +88,6 @@ async def group_main_refresh(callback: CallbackQuery, _: callable, **kwargs):
     await callback.answer('✅ Refreshed')
 
 
-@router.callback_query(F.data == "menu:economy")
-async def menu_economy(callback: CallbackQuery, _: callable, **kwargs):
-    text = _('economy_menu')
-    from bot.keyboards.economy import economy_menu_kb
-    from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=economy_menu_kb(_))
-    await callback.answer()
-
-
 @router.callback_query(F.data == "menu:games")
 async def menu_games(callback: CallbackQuery, _: callable, **kwargs):
     text = _('games_menu')
@@ -108,26 +99,19 @@ async def menu_games(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:reputation")
 async def menu_reputation(callback: CallbackQuery, _: callable, db_session: AsyncSession = None, db_user=None, **kwargs):
-    text = '✨ ┌─────────────────────────┐\n  🌟 <b>سیستم اعتبار شیشه‌ای</b>\n✨ ┣━━━━━━━━━━━━━━━━━━━━━━━━━┫\n'
+    from bot.utils.glass_panel import GLASS_TOP, GLASS_LINE, GLASS_BOT, ACCENT_GLOW
+    text = f"{ACCENT_GLOW} {GLASS_TOP}\n  {_('reputation_title')}\n{ACCENT_GLOW} {GLASS_LINE}\n\n"
     if db_session and db_user:
         from sqlalchemy import select
         from bot.database.models import Reputation
         rep = await db_session.scalar(select(Reputation).where(Reputation.user_id == db_user.id))
         pos = rep.positive if rep else 0
         neg = rep.negative if rep else 0
-        text += f'  👍 مثبت: <b>{pos}</b>\n  👎 منفی: <b>{neg}</b>\n  📊 خالص: <b>{pos - neg}</b>\n✨ └─────────────────────────┘'
+        text += f"  {_('rep_positive')}: <b>{pos}</b>\n  {_('rep_negative')}: <b>{neg}</b>\n  {_('rep_net')}: <b>{pos - neg}</b>\n\n{ACCENT_GLOW} {GLASS_BOT}"
     else:
-        text += '  ' + _('no_data') + '\n✨ └─────────────────────────┘'
+        text += f"  {_('no_data')}\n\n{ACCENT_GLOW} {GLASS_BOT}"
     from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
-    await callback.answer()
-
-
-@router.callback_query(F.data == "menu:help")
-async def menu_help(callback: CallbackQuery, _: callable, **kwargs):
-    from bot.handlers.help import HELP_TEXT
-    from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(HELP_TEXT, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
     await callback.answer()
 
 
@@ -139,4 +123,12 @@ async def menu_language(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:channel")
 async def menu_channel(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.answer('🔗 کانال ربات به زودی معرفی می‌شود!', show_alert=True)
+    from bot.utils.glass_panel import GLASS_TOP, GLASS_LINE, GLASS_BOT, ACCENT_GLOW
+    text = (
+        f"{ACCENT_GLOW} {GLASS_TOP}\n"
+        f"  {_('channel_info_text')}\n\n"
+        f"{ACCENT_GLOW} {GLASS_BOT}"
+    )
+    from bot.keyboards.main_menu import back_button_kb
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
+    await callback.answer()

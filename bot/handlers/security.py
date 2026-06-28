@@ -202,7 +202,7 @@ async def cmd_lock(message: Message, _: callable, db_session: AsyncSession = Non
     lock_type = args[0] if args else None
     is_locking = cmd == 'lock'
     if not lock_type:
-        await message.answer('/lock <type>\n/unlock <type>\n\nانواع: text, media, sticker, link')
+        await message.answer(_('lock_usage'), parse_mode='HTML')
         return
     if db_session:
         security = await _get_or_create_security(db_session, message.chat.id)
@@ -214,4 +214,4 @@ async def cmd_lock(message: Message, _: callable, db_session: AsyncSession = Non
         field = field_map.get(lock_type.lower())
         if field:
             setattr(security, field, is_locking)
-    await message.reply(f"{'🔒' if is_locking else '🔓'} {lock_type} {'قفل شد' if is_locking else 'باز شد'}")
+    await message.reply(_('lock_locked').format(type=lock_type) if is_locking else _('lock_unlocked').format(type=lock_type))
