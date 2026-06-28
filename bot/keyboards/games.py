@@ -5,6 +5,18 @@ def games_menu_kb(_):
     return None
 
 
+def dice_menu_kb(_):
+    return None
+
+
+def rps_choice_kb(_):
+    return None
+
+
+def wheel_spin_kb(_):
+    return None
+
+
 def game_result_kb(_):
     return None
 
