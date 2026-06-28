@@ -32,6 +32,8 @@ services:
           name: guardian-redis
           type: redis
           property: connectionString
+      - key: ADMIN_KEY
+        sync: false
       - key: BOT_OWNER_ID
         sync: false
       - key: LOG_LEVEL
