@@ -1,18 +1,17 @@
 from typing import Callable
 
 
-  def games_menu_kb(_: Callable):
-      return None
+def games_menu_kb(_):
+    return None
 
 
-  def game_result_kb(_: Callable):
-      return None
+def game_result_kb(_):
+    return None
 
 
-  def tournament_kb(_: Callable):
-      return None
+def tournament_kb(_):
+    return None
 
 
-  def duel_kb(_: Callable, duel_id: int = 0):
-      return None
-  
+def duel_kb(_, duel_id=0):
+    return None
