@@ -104,9 +104,13 @@ from aiogram import Router, F
   async def channel_info(callback: CallbackQuery, _: callable, **kwargs):
       from bot.keyboards.main_menu import back_button_kb
       text = (
-          "📢 <b>کانال رسمی گاردیان X</b>\n\nآخرین اخبار، بروزرسانی‌ها و اطلاعیه‌ها را دنبال کنید!\n\n🔔 همین الان عضو شوید: @VPS24H"
-          if kwargs.get("lang") == "fa" else
-          "📢 <b>Official Channel</b>\n\nFollow us for the latest news and updates!\n\n🔔 Join now: @VPS24H"
+          "📢 <b>کانال رسمی گاردیان X</b>\n\n"
+          "آخرین اخبار، بروزرسانی‌ها و اطلاعیه‌ها را دنبال کنید!\n\n"
+          "🔔 همین الان عضو شوید: @VPS24H"
+      ) if kwargs.get("lang") == "fa" else (
+          "📢 <b>Official Channel</b>\n\n"
+          "Follow us for the latest news and updates!\n\n"
+          "🔔 Join now: @VPS24H"
       )
       await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
       await callback.answer()
@@ -116,9 +120,19 @@ from aiogram import Router, F
   async def tournaments_menu(callback: CallbackQuery, _: callable, **kwargs):
       from bot.keyboards.main_menu import back_button_kb
       text = (
-          "🏆 <b>تورنمنت‌ها</b>\n\n🚧 <b>به زودی!</b>\n\nبا گروه‌های دیگر رقابت کنید!"
-          if kwargs.get("lang") == "fa" else
-          "🏆 <b>Tournaments</b>\n\n🚧 <b>Coming Soon!</b>\n\nCompete with other groups!"
+          "🏆 <b>تورنمنت‌ها</b>\n\n"
+          "🚧 <b>به زودی!</b>\n\n"
+          "با گروه‌های دیگر رقابت کنید!\n"
+          "• 🎮 تورنمنت بازی‌ها\n"
+          "• ⚔️ قهرمانی مبارزه\n"
+          "• 🏅 جوایز و پاداش‌ها"
+      ) if kwargs.get("lang") == "fa" else (
+          "🏆 <b>Tournaments</b>\n\n"
+          "🚧 <b>Coming Soon!</b>\n\n"
+          "Compete with other groups!\n"
+          "• 🎮 Game tournaments\n"
+          "• ⚔️ Duel championships\n"
+          "• 🏅 Prize pools & rewards"
       )
       await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
       await callback.answer()

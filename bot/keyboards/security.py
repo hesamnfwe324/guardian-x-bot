@@ -31,7 +31,7 @@ from aiogram.types import InlineKeyboardMarkup
       builder.button(text=f"{status(security.captcha_enabled)} {_('btn_captcha')}", callback_data="sec:captcha")
       builder.button(text=_('btn_locks'), callback_data="sec:locks")
       builder.button(text=_('btn_advanced_protection'), callback_data="sec:advanced")
-      builder.button(text=f"{'\ud83d\udea8' if security.emergency_mode else '\ud83d\udfe2'} {_('btn_emergency')}", callback_data="sec:emergency")
+      builder.button(text=f"{'🚨' if security.emergency_mode else '🟢'} {_('btn_emergency')}", callback_data="sec:emergency")
       builder.button(text=_('btn_back'), callback_data="menu:main")
       builder.adjust(2)
       return builder.as_markup()
