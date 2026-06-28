@@ -1,13 +1,10 @@
 {
   "lang_name": "🇮🇷 فارسی",
   "lang_code": "fa",
-
   "select_language": "🌐 زبان خود را انتخاب کنید:",
   "language_set": "✅ زبان فارسی فعال شد!",
-
   "welcome_bot": "╔══════════════════╗\n🛡 <b>گاردیان X آلتیمیت</b>\n╚══════════════════╝\n\n سلام <b>{name}</b> عزیز! خوش آمدید 👋\n\n🎯 من ربات مدیریت پیشرفته گروه شما هستم\n💡 از منوی زیر شروع کنید:",
   "main_menu": "🏠 <b>منوی اصلی</b>\n━━━━━━━━━━━━━━━━\nیک بخش را انتخاب کنید:",
-
   "btn_security": "🛡 امنیت",
   "btn_moderation": "⚖️ مدیریت",
   "btn_economy": "💰 اقتصاد",
@@ -35,13 +32,11 @@
   "btn_prev": "◀️ قبلی",
   "btn_save": "💾 ذخیره",
   "btn_reset": "🔄 بازنشانی",
-
   "btn_action_delete": "🗑 حذف پیام",
   "btn_action_warn": "⚠️ اخطار",
   "btn_action_mute": "🔇 بی‌صدا",
   "btn_action_kick": "👟 اخراج",
   "btn_action_ban": "🔨 بن دائم",
-
   "btn_welcome": "👋 خوشامدگویی",
   "btn_log_channel": "📋 کانال لاگ",
   "btn_general_settings": "⚙️ تنظیمات کلی",
@@ -51,7 +46,6 @@
   "welcome_set": "✅ پیام خوشامدگویی ذخیره شد!",
   "settings_menu": "⚙️ <b>تنظیمات</b>\n━━━━━━━━━━━━\nیک بخش را انتخاب کنید:",
   "error_group_only": "❌ این قابلیت فقط در گروه‌ها در دسترس است.",
-
   "security_menu": "🛡 <b>مرکز امنیت</b>\n━━━━━━━━━━━━━━━━\nتنظیمات محافظت گروه خود را مدیریت کنید:",
   "btn_anti_spam": "🚫 ضد اسپم",
   "btn_anti_flood": "🌊 ضد فلود",
@@ -77,7 +71,6 @@
   "btn_locks": "🔒 قفل‌ها",
   "btn_advanced_protection": "⚔️ محافظت پیشرفته",
   "btn_emergency": "🚨 حالت اضطراری",
-
   "moderation_menu": "⚖️ <b>مدیریت</b>\n━━━━━━━━━━━━\nعملیات مدیریتی را انتخاب کنید:",
   "btn_ban": "🔨 بن",
   "btn_unban": "🔓 رفع بن",
@@ -90,7 +83,6 @@
   "btn_temp_mute": "⏱️ بی‌صدای موقت",
   "btn_notes": "📝 یادداشت‌ها",
   "btn_history": "📜 تاریخچه",
-
   "economy_menu": "💰 <b>اقتصاد</b>\n━━━━━━━━━━━━",
   "wallet_title": "👛 <b>کیف پول شما</b>\n━━━━━━━━━━━━",
   "balance": "💵 موجودی: <code>{amount}</code> سکه",
@@ -112,12 +104,10 @@
   "missions_menu": "📋 <b>مأموریت‌ها</b>\n━━━━━━━━━━━━\nمأموریت‌ها را انتخاب کنید:",
   "achievements_menu": "🏅 <b>دستاوردها</b>\n━━━━━━━━━━━━",
   "achievements_count": "🎯 دستاورد کسب‌شده: <b>{earned}</b> از <b>{total}</b>",
-
   "level_menu": "⭐ <b>سیستم سطح و XP</b>\n━━━━━━━━━━━━",
   "your_level": "🎯 سطح شما: <b>{level}</b>",
   "your_xp": "⚡ XP: <code>{xp}/{next_xp}</code>",
   "level_up": "🎉 <b>تبریک {name}!</b>\n\n🚀 به <b>سطح {level}</b> رسیدید!\n✨ مزایای جدید باز شد!",
-
   "games_menu": "🎮 <b>آرنای بازی‌ها</b>\n━━━━━━━━━━━━\nیک بازی انتخاب کنید:",
   "btn_dice": "🎲 تاس هوشمند",
   "btn_quiz": "🧠 کوئیز هوش",
@@ -129,7 +119,6 @@
   "btn_mines": "💣 مین‌یاب",
   "btn_chess": "♟️ شطرنج سریع",
   "btn_roulette": "🎰 رولت",
-
   "dice_menu": "🎲 <b>تاس هوشمند</b>\n━━━━━━━━━━━━\nحالت بازی را انتخاب کنید:",
   "btn_classic_dice": "🎲 کلاسیک",
   "btn_prediction_dice": "🔮 پیش‌بینی",
@@ -141,12 +130,10 @@
   "btn_daily_challenge": "📅 چالش روزانه",
   "btn_dice_streak": "🔥 ریسه پیروزی",
   "btn_vip_arena": "💎 آرنای VIP",
-
   "game_bet_prompt": "💵 مقدار شرط را وارد کنید:\n(حداقل: {min} — حداکثر: {max} سکه)\nیا <b>0</b> برای بازی رایگان:",
   "game_won": "🎉 <b>بردید!</b> +<b>{amount} سکه</b> دریافت کردید!",
   "game_lost": "😔 <b>باختید.</b> <b>{amount} سکه</b> از دست رفت.",
   "game_draw": "🤝 <b>مساوی!</b> شرط برگردانده شد.",
-
   "game_stats_title": "📊 <b>آمار بازی‌های شما</b>\n━━━━━━━━━━━━",
   "games_played": "🎮 کل بازی‌ها: <b>{count}</b>",
   "games_won": "🏆 برد: <b>{count}</b>",
@@ -156,13 +143,11 @@
   "coins_won_total": "🤑 کل درآمد: <code>{amount}</code> سکه",
   "btn_game_stats": "📊 آمار من",
   "btn_game_rankings": "🏆 رتبه‌بندی",
-
   "duel_menu": "⚔️ <b>آرنای مبارزه</b>\n━━━━━━━━━━━━",
   "btn_new_duel": "⚔️ چالش جدید",
   "duel_challenge": "⚔️ <b>چالش!</b>\n\n<b>{challenger}</b> به <b>{opponent}</b> مبارزه داد!\n💰 شرط: <b>{wager} سکه</b>",
   "btn_accept_duel": "✅ قبول می‌کنم",
   "btn_decline_duel": "❌ رد می‌کنم",
-
   "help_menu": "❓ <b>مرکز راهنما</b>\n━━━━━━━━━━━━\nیک بخش را انتخاب کنید:",
   "btn_help_security": "🛡 امنیت",
   "btn_help_moderation": "⚖️ مدیریت",
@@ -172,9 +157,15 @@
   "help_moderation_text": "⚖️ <b>راهنمای مدیریت</b>\n━━━━━━━━━━━━\n\n🔨 <b>/ban @user</b> — بن دائم\n⏱️ <b>/ban @user 1h</b> — بن موقت\n🔓 <b>/unban @user</b> — رفع بن\n👟 <b>/kick @user</b> — اخراج\n🔇 <b>/mute @user</b> — بی‌صدا\n🔊 <b>/unmute @user</b> — رفع بی‌صدا\n⚠️ <b>/warn @user</b> — اخطار\n📜 <b>/history @user</b> — تاریخچه",
   "help_economy_text": "💰 <b>راهنمای اقتصاد</b>\n━━━━━━━━━━━━\n\n☀️ <b>جایزه روزانه:</b> 100 سکه\n📅 <b>جایزه هفتگی:</b> 500 سکه\n🗓️ <b>جایزه ماهانه:</b> 2000 سکه\n👥 <b>دعوت دوستان:</b> 150 سکه به ازای هر نفر\n⭐ <b>XP:</b> برای هر پیام در گروه\n💬 <b>/balance</b> — مشاهده موجودی\n💸 <b>/daily</b> — دریافت جایزه روزانه",
   "help_games_text": "🎮 <b>راهنمای بازی‌ها</b>\n━━━━━━━━━━━━\n\n🎲 <b>تاس:</b> عدد بزرگ‌تر برنده!\n🧠 <b>کوئیز:</b> جواب درست = XP + سکه\n✊ <b>سنگ‌کاغذقیچی:</b> کلاسیک!\n🎡 <b>چرخ شانس:</b> چرخ بزن، ببین چی میشه!\n🔢 <b>نبرد اعداد:</b> عدد شما vs عدد ربات\n🃏 <b>نبرد کارت:</b> کارت بالاتر برنده!\n🗺️ <b>شکار گنج:</b> گنج رو پیدا کن!\n💣 <b>مین‌یاب:</b> خانه‌ها را آشکار کن!\n🎰 <b>رولت:</b> شانست رو امتحان کن!",
-
   "error_not_admin": "❌ دسترسی ادمین لازم است.",
   "error_generic": "❌ خطایی رخ داد. لطفاً دوباره تلاش کنید.",
   "loading": "⏳ در حال بارگذاری...",
-  "no_data": "📭 داده‌ای یافت نشد."
+  "no_data": "📭 داده‌ای یافت نشد.",
+  "btn_shop": "🛒 فروشگاه",
+  "btn_join_game": "▶️ ورود به بازی",
+  "btn_rock": "🪨 سنگ",
+  "btn_paper": "📄 کاغذ",
+  "btn_scissors": "✂️ قیچی",
+  "btn_spin_wheel": "🎡 بچرخان!",
+  "btn_mute_forever": "♾️ برای همیشه"
 }
