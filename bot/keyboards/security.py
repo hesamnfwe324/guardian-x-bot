@@ -29,10 +29,10 @@ def security_menu_kb(_: Callable, security: SecuritySettings) -> InlineKeyboardM
     builder.button(text=f"{status(security.anti_channel_promo)} {_('btn_anti_promo')}", callback_data="sec:anti_promo")
     builder.button(text=f"{status(security.anti_mass_join)} {_('btn_anti_mass_join')}", callback_data="sec:anti_mass_join")
     builder.button(text=f"{status(security.captcha_enabled)} {_('btn_captcha')}", callback_data="sec:captcha")
-    builder.button(text=_('btn_locks'), callback_data="sec:locks")
-    builder.button(text=_('btn_advanced_protection'), callback_data="sec:advanced")
+    builder.button(text=_("btn_locks"), callback_data="sec:locks")
+    builder.button(text=_("btn_advanced_protection"), callback_data="sec:advanced")
     builder.button(text=f"{'🚨' if security.emergency_mode else '🟢'} {_('btn_emergency')}", callback_data="sec:emergency")
-    builder.button(text=_('btn_back'), callback_data="menu:main")
+    builder.button(text=_("btn_back"), callback_data="menu:main")
     builder.adjust(2)
     return builder.as_markup()
 
@@ -65,22 +65,21 @@ def locks_menu_kb(_: Callable, security: SecuritySettings) -> InlineKeyboardMark
     ]
     for text, cb in locks:
         builder.button(text=text, callback_data=cb)
-    builder.button(text=_('btn_back'), callback_data="sec:menu")
+    builder.button(text=_("btn_back"), callback_data="sec:menu")
     builder.adjust(2)
     return builder.as_markup()
 
 
 def captcha_menu_kb(_: Callable, security: SecuritySettings) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    toggle_text = _('btn_disable') if security.captcha_enabled else _('btn_enable')
-    status_icon = "✅" if security.captcha_enabled else "❌"
+    status = "✅" if security.captcha_enabled else "❌"
     builder.button(
-        text=f"{status_icon} {toggle_text} {_('btn_captcha')}",
+        text=f"{status} {'Enable' if not security.captcha_enabled else 'Disable'} Captcha",
         callback_data="captcha:toggle"
     )
-    builder.button(text=_('btn_captcha_button'), callback_data="captcha:type:button")
-    builder.button(text=_('btn_captcha_math'), callback_data="captcha:type:math")
-    builder.button(text=_('btn_captcha_question'), callback_data="captcha:type:question")
-    builder.button(text=_('btn_back'), callback_data="sec:menu")
+    builder.button(text=_("btn_captcha_button"), callback_data="captcha:type:button")
+    builder.button(text=_("btn_captcha_math"), callback_data="captcha:type:math")
+    builder.button(text=_("btn_captcha_question"), callback_data="captcha:type:question")
+    builder.button(text=_("btn_back"), callback_data="sec:menu")
     builder.adjust(1, 3, 1)
     return builder.as_markup()
