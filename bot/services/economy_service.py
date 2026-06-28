@@ -12,7 +12,7 @@ logger = structlog.get_logger()
 
 async def get_balance(session: AsyncSession, user_id: int) -> Tuple[int, int]:
     wallet = await get_or_create_wallet(session, user_id)
-    return wallet.balance, wallet.bank_balance
+    return wallet.balance or 0, wallet.bank_balance or 0
 
 
 async def add_coins(
@@ -45,8 +45,8 @@ async def deduct_coins(
     description: str = "",
 ) -> Tuple[bool, int]:
     wallet = await get_or_create_wallet(session, user_id)
-    if wallet.balance < amount:
-        return False, wallet.balance
+    if (wallet.balance or 0) < amount:
+        return False, wallet.balance or 0
     wallet.balance -= amount
     wallet.total_spent = (wallet.total_spent or 0) + amount
     tx = Transaction(
@@ -61,8 +61,8 @@ async def deduct_coins(
 
 async def deposit_to_bank(session: AsyncSession, user_id: int, amount: int) -> Tuple[bool, int, int]:
     wallet = await get_or_create_wallet(session, user_id)
-    if wallet.balance < amount:
-        return False, wallet.balance, wallet.bank_balance
+    if (wallet.balance or 0) < amount:
+        return False, wallet.balance or 0, wallet.bank_balance or 0
     wallet.balance -= amount
     wallet.bank_balance = (wallet.bank_balance or 0) + amount
     return True, wallet.balance, wallet.bank_balance
@@ -70,8 +70,8 @@ async def deposit_to_bank(session: AsyncSession, user_id: int, amount: int) -> T
 
 async def withdraw_from_bank(session: AsyncSession, user_id: int, amount: int) -> Tuple[bool, int, int]:
     wallet = await get_or_create_wallet(session, user_id)
-    if wallet.bank_balance < amount:
-        return False, wallet.balance, wallet.bank_balance
+    if (wallet.bank_balance or 0) < amount:
+        return False, wallet.balance or 0, wallet.bank_balance or 0
     wallet.bank_balance -= amount
     wallet.balance = (wallet.balance or 0) + amount
     return True, wallet.balance, wallet.bank_balance
@@ -82,12 +82,13 @@ async def transfer_coins(
     from_user_id: int,
     to_user_id: int,
     amount: int,
-) -> Tuple[bool, str]:
+) -> Tuple[bool, int, int]:
+    """Returns (success, sender_balance, recipient_balance)."""
     success, remaining = await deduct_coins(session, from_user_id, amount, "transfer_out", f"Transfer to {to_user_id}")
     if not success:
-        return False, "insufficient_funds"
-    await add_coins(session, to_user_id, amount, "transfer_in", f"Transfer from {from_user_id}")
-    return True, "success"
+        return False, remaining, 0
+    recipient_balance = await add_coins(session, to_user_id, amount, "transfer_in", f"Transfer from {from_user_id}")
+    return True, remaining, recipient_balance
 
 
 async def claim_daily_reward(session: AsyncSession, user_id: int) -> Tuple[bool, int, Optional[datetime]]:
@@ -157,10 +158,6 @@ async def process_referral(
     referrer_id: int,
     new_user_id: int,
 ) -> bool:
-    """
-    Record a referral and credit the referrer if not already rewarded.
-    Returns True if the referral reward was granted, False otherwise.
-    """
     existing = await session.scalar(
         select(Referral).where(Referral.referred_id == new_user_id)
     )
@@ -185,13 +182,7 @@ async def process_referral(
         description=f"Referral reward for inviting user {new_user_id}",
     )
     session.add(tx)
-
     referral.reward_given = True
 
-    logger.info(
-        "Referral reward granted",
-        referrer_id=referrer_id,
-        new_user_id=new_user_id,
-        reward=settings.REFERRAL_REWARD,
-    )
+    logger.info("Referral reward granted", referrer_id=referrer_id, new_user_id=new_user_id, reward=settings.REFERRAL_REWARD)
     return True

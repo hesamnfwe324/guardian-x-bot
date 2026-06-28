@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, and_
+from sqlalchemy import select, desc, func
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.keyboards.main_menu import nav_kb
 from bot.utils.helpers import format_number, safe_username
@@ -23,14 +23,10 @@ def tournaments_kb(_):
     return builder.as_markup()
 
 
-async def render_tournaments_menu(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text(_("tournaments_menu"), reply_markup=tournaments_kb(_), parse_mode="HTML")
-    await callback.answer()
-
-
 @router.callback_query(F.data == "menu:tournaments")
 async def tournaments_menu(callback: CallbackQuery, _: callable, **kwargs):
-    await render_tournaments_menu(callback, _)
+    await callback.message.edit_text(_("tournaments_menu"), reply_markup=tournaments_kb(_), parse_mode="HTML")
+    await callback.answer()
 
 
 @router.callback_query(F.data == "trn:active")
@@ -38,16 +34,30 @@ async def active_tournaments(callback: CallbackQuery, _: callable, db_session: A
     text = _("no_active_tournaments")
     if db_session:
         try:
-            from bot.database.models import Tournament
-            stmt = select(Tournament).where(Tournament.status.in_(["open","running"])).order_by(Tournament.starts_at).limit(5)
+            from bot.database.models import Tournament, TournamentParticipant
+            stmt = (
+                select(Tournament)
+                .where(Tournament.status.in_(["open", "running"]))
+                .order_by(Tournament.starts_at)
+                .limit(5)
+            )
             rows = (await db_session.execute(stmt)).scalars().all()
             if rows:
                 text = _("active_tournaments_title") + "\n\n"
                 for t in rows:
+                    # Count participants via subquery
+                    count = await db_session.scalar(
+                        select(func.count(TournamentParticipant.id))
+                        .where(TournamentParticipant.tournament_id == t.id)
+                    ) or 0
                     icon = "🟢" if t.status == "open" else "🔵"
-                    text += f"{icon} <b>{t.name}</b>\n  {_('tournament_prize')}: {format_number(t.prize_pool)} {_('coin_unit')}\n  {t.participant_count}/{t.max_participants} {_('participants_unit')}\n\n"
-        except Exception:
-            pass
+                    text += (
+                        f"{icon} <b>{t.name}</b>\n"
+                        f"  {_('tournament_prize')}: {format_number(t.prize_pool or 0)} {_('coin_unit')}\n"
+                        f"  {count}/{t.max_players} {_('participants_unit')}\n\n"
+                    )
+        except Exception as e:
+            logger.warning("active_tournaments error", error=str(e))
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "menu:tournaments", "trn:active"))
     await callback.answer()
 
@@ -64,14 +74,22 @@ async def tournament_history(callback: CallbackQuery, _: callable, db_session: A
     if db_session:
         try:
             from bot.database.models import Tournament
-            stmt = select(Tournament).where(Tournament.status == "finished").order_by(desc(Tournament.ends_at)).limit(5)
+            stmt = (
+                select(Tournament)
+                .where(Tournament.status == "finished")
+                .order_by(desc(Tournament.ended_at))  # Fix: ended_at not ends_at
+                .limit(5)
+            )
             rows = (await db_session.execute(stmt)).scalars().all()
             if rows:
                 text = _("tournament_history_title") + "\n\n"
                 for t in rows:
-                    text += f"🏆 <b>{t.name}</b>\n  {_('tournament_winner')}: {t.winner_name or _('no_data')}\n  {_('tournament_prize')}: {format_number(t.prize_pool)} {_('coin_unit')}\n\n"
-        except Exception:
-            pass
+                    text += (
+                        f"🏆 <b>{t.name}</b>\n"
+                        f"  {_('tournament_prize')}: {format_number(t.prize_pool or 0)} {_('coin_unit')}\n\n"
+                    )
+        except Exception as e:
+            logger.warning("tournament_history error", error=str(e))
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "menu:tournaments", "trn:history"))
     await callback.answer()
 
@@ -82,16 +100,20 @@ async def tournament_rankings(callback: CallbackQuery, _: callable, db_session: 
     if db_session:
         try:
             from bot.database.models import DuelStats, User
-            stmt = select(User, DuelStats).join(DuelStats, DuelStats.user_id == User.id).order_by(desc(DuelStats.wins)).limit(10)
+            stmt = (
+                select(User, DuelStats)
+                .join(DuelStats, DuelStats.user_id == User.id)
+                .order_by(desc(DuelStats.wins))
+                .limit(10)
+            )
             rows = (await db_session.execute(stmt)).all()
-            medals = ["🥇","🥈","🥉"]
-            text = _("tournament_rankings_title") + "\n\n"
-            for i, (user, ds) in enumerate(rows, 1):
-                medal = medals[i-1] if i <= 3 else f"{i}."
-                text += f"{medal} {safe_username(user)} — {ds.wins} {_('wins_unit')}\n"
-            if not rows:
-                text = _("no_data")
-        except Exception:
-            pass
+            medals = ["🥇", "🥈", "🥉"]
+            if rows:
+                text = _("tournament_rankings_title") + "\n\n"
+                for i, (user, ds) in enumerate(rows, 1):
+                    medal = medals[i - 1] if i <= 3 else f"{i}."
+                    text += f"{medal} {safe_username(user)} — {ds.wins or 0} {_('wins_unit')}\n"
+        except Exception as e:
+            logger.warning("tournament_rankings error", error=str(e))
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "menu:tournaments", "trn:rankings"))
     await callback.answer()

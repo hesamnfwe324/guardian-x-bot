@@ -121,7 +121,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
     if db_user is None or db_session is None:
         await message.reply('❌ لطفاً /start بزنید.')
         return
-    segments = [('💀 باخت',0),('🟡 0.5×',0),('🟢 1.5×',0),('🔵 2×',0),('🟣 3×',0),('🌟 5×',0),('💎 10×',0)]
+    segments = [('💀 باخت', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
     probs = [0.30, 0.05, 0.20, 0.25, 0.15, 0.03, 0.02]
     rand = random.random()
     cumulative = 0.0
@@ -132,10 +132,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
             chosen_label, chosen_mult = segments[i]
             break
     spin_animation = '🎡 ' + ' → '.join([s[0] for s in random.sample(segments, 4)]) + f' → <b>{chosen_label}</b>'
-    if chosen_mult == 0:
-        outcome = '💀 باختید!'
-    else:
-        outcome = f'🎉 ضریب <b>{chosen_label}</b>!'
+    outcome = '💀 باختید!' if chosen_mult == 0 else f'🎉 ضریب <b>{chosen_label}</b>!'
     text = f'🎡 <b>چرخ شانس</b>\n━━━━━━━━━━━━\n\n{spin_animation}\n\nنتیجه: {chosen_label}\n\n{outcome}'
     await message.answer(text, parse_mode='HTML')
 
@@ -248,8 +245,8 @@ async def cmd_numwar(message: Message, _: callable, db_session=None, db_user=Non
 
 
 # ─── /cards ───────────────────────────────────────────────
-CARD_RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
-CARD_SUITS = ['♠️','♥️','♦️','♣️']
+CARD_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+CARD_SUITS = ['♠️', '♥️', '♦️', '♣️']
 
 
 def random_card():
@@ -286,7 +283,7 @@ async def cmd_treasure(message: Message, _: callable, db_session=None, db_user=N
     if db_user is None or db_session is None:
         await message.reply('❌ لطفاً /start بزنید.')
         return
-    spots = ['💎','💎','💣','💣','💣','💎','💣','💣','💎']
+    spots = ['💎', '💎', '💣', '💣', '💣', '💎', '💣', '💣', '💎']
     random.shuffle(spots)
     chosen = random.choice(spots)
     if chosen == '💎':
@@ -327,7 +324,7 @@ async def cmd_mines(message: Message, _: callable, db_session=None, db_user=None
 
 # ─── /roulette ────────────────────────────────────────────
 ROULETTE_NUMBERS = list(range(37))
-ROULETTE_RED = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
+ROULETTE_RED = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
 
 
 @router.message(Command('roulette'))
@@ -373,11 +370,14 @@ async def cmd_stats(message: Message, _: callable, db_session=None, db_user=None
         await message.reply('❌ لطفاً /start بزنید.')
         return
     stats = await get_or_create_game_stats(db_session, db_user.id)
+    wins = stats.total_wins or 0
+    losses = stats.total_losses or 0
+    draws = (stats.total_games or 0) - wins - losses
     text = (
         f'📊 <b>آمار بازی‌های شما</b>\n━━━━━━━━━━━━\n\n'
-        f'🏆 برد‌ها: <b>{stats.wins or 0}</b>\n'
-        f'💀 باخت‌ها: <b>{stats.losses or 0}</b>\n'
-        f'🤝 مساوی‌ها: <b>{stats.draws or 0}</b>\n'
-        f'💰 کل برده: <b>{format_number(stats.total_won or 0)}</b>'
+        f'🏆 برد‌ها: <b>{wins}</b>\n'
+        f'💀 باخت‌ها: <b>{losses}</b>\n'
+        f'🤝 مساوی‌ها: <b>{max(0, draws)}</b>\n'
+        f'💰 کل برده: <b>{format_number(stats.total_coins_won or 0)}</b>'
     )
     await message.answer(text, parse_mode='HTML')

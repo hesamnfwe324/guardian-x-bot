@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
-from aiogram.filters import Command, Command
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +8,7 @@ from sqlalchemy import select
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.database.models import GroupSettings, WelcomeSettings
 from bot.keyboards.main_menu import nav_kb
+from bot.keyboards.settings import settings_menu_kb
 import structlog
 
 logger = structlog.get_logger()
@@ -27,26 +28,23 @@ async def cmd_settings(message: Message, _: callable, **kwargs):
             return
     except Exception:
         return
-    from bot.keyboards.settings import settings_menu_kb
     await message.answer(_('settings_menu_title'), reply_markup=settings_menu_kb(_), parse_mode='HTML')
+
+
+@router.callback_query(F.data == "menu:settings")
+async def settings_menu_cb(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.message.edit_text(_('settings_menu_title'), reply_markup=settings_menu_kb(_), parse_mode='HTML')
+    await callback.answer()
+
+
+@router.callback_query(F.data == "settings:menu")
+async def settings_menu_back(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.message.edit_text(_('settings_menu_title'), reply_markup=settings_menu_kb(_), parse_mode='HTML')
+    await callback.answer()
 
 
 class WelcomeStates(StatesGroup):
     waiting_message = State()
-
-
-def settings_kb(_):
-    builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_welcome"),          callback_data="settings:welcome")
-    builder.button(text=_("btn_goodbye"),          callback_data="settings:goodbye")
-    builder.button(text=_("btn_log_channel"),      callback_data="settings:logs")
-    builder.button(text=_("btn_general_settings"), callback_data="settings:general")
-    builder.button(text=_("btn_slow_mode"),        callback_data="settings:slowmode")
-    builder.button(text=_("btn_auto_delete"),      callback_data="settings:autodel")
-    builder.button(text=_("btn_back"),             callback_data="menu:main")
-    builder.button(text=_("btn_home"),             callback_data="menu:main")
-    builder.adjust(2, 2, 2, 2)
-    return builder.as_markup()
 
 
 def welcome_kb(_, enabled=True):
@@ -66,13 +64,13 @@ def welcome_kb(_, enabled=True):
 def general_settings_kb(_, gs):
     builder = InlineKeyboardBuilder()
     s = lambda v: "✅" if v else "❌"
-    builder.button(text=f"{s(gs.economy_enabled)} {_('btn_economy_toggle')}",callback_data="gs:eco")
-    builder.button(text=f"{s(gs.games_enabled)} {_('btn_games_toggle')}",   callback_data="gs:games")
-    builder.button(text=f"{s(gs.xp_enabled)} {_('btn_xp_toggle')}",         callback_data="gs:xp")
-    builder.button(text=f"{s(gs.reputation_enabled)} {_('btn_rep_toggle')}", callback_data="gs:rep")
-    builder.button(text=f"{s(gs.silent_actions)} {_('btn_silent')}",         callback_data="gs:silent")
-    builder.button(text=_("btn_max_warns") + f" ({gs.max_warns})",           callback_data="gs:maxwarns")
-    builder.button(text=_("btn_warn_action") + f" ({gs.warn_action})",       callback_data="gs:warnaction")
+    builder.button(text=f"{s(gs.economy_enabled)} {_('btn_economy_toggle')}", callback_data="gs:eco")
+    builder.button(text=f"{s(gs.games_enabled)} {_('btn_games_toggle')}",     callback_data="gs:games")
+    builder.button(text=f"{s(gs.xp_enabled)} {_('btn_xp_toggle')}",           callback_data="gs:xp")
+    builder.button(text=f"{s(gs.reputation_enabled)} {_('btn_rep_toggle')}",  callback_data="gs:rep")
+    builder.button(text=f"{s(gs.silent_actions)} {_('btn_silent')}",           callback_data="gs:silent")
+    builder.button(text=_("btn_max_warns") + f" ({gs.max_warns})",             callback_data="gs:maxwarns")
+    builder.button(text=_("btn_warn_action") + f" ({gs.warn_action})",         callback_data="gs:warnaction")
     builder.button(text=_("btn_back"),  callback_data="settings:menu")
     builder.button(text=_("btn_home"),  callback_data="menu:main")
     builder.adjust(2, 2, 1, 2, 2)
@@ -90,7 +88,7 @@ def slowmode_kb(_):
 
 
 @router.callback_query(F.data == "settings:welcome")
-async def welcome_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def welcome_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -111,9 +109,10 @@ async def set_welcome_start(callback: CallbackQuery, _: callable, state: FSMCont
 
 
 @router.message(WelcomeStates.waiting_message)
-async def save_welcome_message(message: Message, _: callable, db_session: AsyncSession, db_group, state: FSMContext, **kwargs):
+async def save_welcome_message(message: Message, _: callable, db_session: AsyncSession, db_group=None, state: FSMContext = None, **kwargs):
     if not db_group:
-        await state.clear()
+        if state:
+            await state.clear()
         return
     ws = await db_session.scalar(select(WelcomeSettings).where(WelcomeSettings.group_id == db_group.id))
     if not ws:
@@ -122,7 +121,8 @@ async def save_welcome_message(message: Message, _: callable, db_session: AsyncS
     else:
         ws.message = message.text
     await message.reply(_("welcome_set"))
-    await state.clear()
+    if state:
+        await state.clear()
 
 
 @router.callback_query(F.data == "welcome:vars")
@@ -131,7 +131,7 @@ async def welcome_variables(callback: CallbackQuery, _: callable, **kwargs):
 
 
 @router.callback_query(F.data == "welcome:preview")
-async def welcome_preview(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def welcome_preview(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -145,7 +145,7 @@ async def welcome_preview(callback: CallbackQuery, _: callable, db_session: Asyn
 
 
 @router.callback_query(F.data == "welcome:toggle")
-async def toggle_welcome(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def toggle_welcome(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -181,7 +181,7 @@ async def goodbye_action(callback: CallbackQuery, _: callable, **kwargs):
 
 
 @router.callback_query(F.data == "settings:logs")
-async def log_channel_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def log_channel_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -202,7 +202,7 @@ async def log_channel_menu(callback: CallbackQuery, _: callable, db_session: Asy
 
 
 @router.callback_query(F.data == "logs:remove")
-async def remove_log_channel(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def remove_log_channel(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -218,7 +218,7 @@ async def set_log_channel(callback: CallbackQuery, _: callable, **kwargs):
 
 
 @router.callback_query(F.data == "logs:events")
-async def log_events_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def log_events_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -247,7 +247,7 @@ async def log_events_menu(callback: CallbackQuery, _: callable, db_session: Asyn
 
 
 @router.callback_query(F.data.startswith("log:"))
-async def toggle_log_event(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def toggle_log_event(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -257,7 +257,8 @@ async def toggle_log_event(callback: CallbackQuery, _: callable, db_session: Asy
         gs = GroupSettings(group_id=db_group.id)
         db_session.add(gs)
         await db_session.flush()
-    field_map = {"join":"log_join","leave":"log_leave","delete":"log_delete","edit":"log_edit","ban":"log_ban","mute":"log_mute","warn":"log_warn"}
+    field_map = {"join": "log_join", "leave": "log_leave", "delete": "log_delete",
+                 "edit": "log_edit", "ban": "log_ban", "mute": "log_mute", "warn": "log_warn"}
     field = field_map.get(event)
     if field:
         setattr(gs, field, not getattr(gs, field))
@@ -266,7 +267,7 @@ async def toggle_log_event(callback: CallbackQuery, _: callable, db_session: Asy
 
 
 @router.callback_query(F.data == "settings:general")
-async def general_settings(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def general_settings(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -280,7 +281,7 @@ async def general_settings(callback: CallbackQuery, _: callable, db_session: Asy
 
 
 @router.callback_query(F.data.startswith("gs:"))
-async def toggle_general_setting(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def toggle_general_setting(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return
@@ -290,7 +291,8 @@ async def toggle_general_setting(callback: CallbackQuery, _: callable, db_sessio
         gs = GroupSettings(group_id=db_group.id)
         db_session.add(gs)
         await db_session.flush()
-    toggle_map = {"eco":"economy_enabled","games":"games_enabled","xp":"xp_enabled","rep":"reputation_enabled","silent":"silent_actions"}
+    toggle_map = {"eco": "economy_enabled", "games": "games_enabled", "xp": "xp_enabled",
+                  "rep": "reputation_enabled", "silent": "silent_actions"}
     if key in toggle_map:
         field = toggle_map[key]
         setattr(gs, field, not getattr(gs, field))
@@ -300,14 +302,14 @@ async def toggle_general_setting(callback: CallbackQuery, _: callable, db_sessio
     elif key == "maxwarns":
         cycle = [1, 2, 3, 5, 10]
         cur = gs.max_warns or 3
-        nxt = cycle[(cycle.index(cur)+1) % len(cycle)] if cur in cycle else 3
+        nxt = cycle[(cycle.index(cur) + 1) % len(cycle)] if cur in cycle else 3
         gs.max_warns = nxt
         await callback.answer(f"{_('btn_max_warns')}: {nxt}")
         await callback.message.edit_reply_markup(reply_markup=general_settings_kb(_, gs))
     elif key == "warnaction":
         actions = ["mute", "kick", "ban"]
         cur = gs.warn_action or "mute"
-        nxt = actions[(actions.index(cur)+1) % len(actions)] if cur in actions else "mute"
+        nxt = actions[(actions.index(cur) + 1) % len(actions)] if cur in actions else "mute"
         gs.warn_action = nxt
         await callback.answer(f"{_('btn_warn_action')}: {nxt}")
         await callback.message.edit_reply_markup(reply_markup=general_settings_kb(_, gs))
@@ -343,7 +345,7 @@ async def autodel_menu(callback: CallbackQuery, _: callable, **kwargs):
 
 
 @router.callback_query(F.data.startswith("autodel:"))
-async def set_autodel(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def set_autodel(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if not db_group:
         await callback.answer(_("error_group_only"), show_alert=True)
         return

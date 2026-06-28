@@ -42,6 +42,7 @@ async def get_target_user(message: Message, session: AsyncSession) -> tuple:
     return target, reason
 
 
+@router.callback_query(F.data == "menu:moderation")
 async def moderation_menu(callback: CallbackQuery, _: callable, **kwargs):
     await callback.message.edit_text(
         _("moderation_menu"),
@@ -51,6 +52,7 @@ async def moderation_menu(callback: CallbackQuery, _: callable, **kwargs):
     await callback.answer()
 
 
+@router.callback_query(F.data == "mod:menu")
 async def moderation_menu_back(callback: CallbackQuery, _: callable, **kwargs):
     await callback.message.edit_text(
         _("moderation_menu"),
@@ -61,7 +63,7 @@ async def moderation_menu_back(callback: CallbackQuery, _: callable, **kwargs):
 
 
 @router.message(Command("ban"))
-async def cmd_ban(message: Message, bot: Bot, _: callable, db_session: AsyncSession, db_group, db_user, **kwargs):
+async def cmd_ban(message: Message, bot: Bot, _: callable, db_session: AsyncSession, db_group=None, db_user=None, **kwargs):
     if message.chat.type == "private":
         await message.reply(_("error_group_only"))
         return
@@ -145,7 +147,7 @@ async def cmd_unmute(message: Message, bot: Bot, _: callable, db_session: AsyncS
 
 
 @router.message(Command("warn"))
-async def cmd_warn(message: Message, bot: Bot, _: callable, db_session: AsyncSession, db_group, **kwargs):
+async def cmd_warn(message: Message, bot: Bot, _: callable, db_session: AsyncSession, db_group=None, **kwargs):
     if message.chat.type == "private":
         return
     target, reason = await get_target_user(message, db_session)
