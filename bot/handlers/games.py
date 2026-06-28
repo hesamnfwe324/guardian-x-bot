@@ -117,7 +117,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
     if db_user is None or db_session is None:
         await message.reply(_('error_generic'))
         return
-    segments = [('💀', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
+    segments = [('💀', 0), ('🟡 0.5×', 0.5), ('🟢 1.5×', 1.5), ('🔵 2×', 2), ('🟣 3×', 3), ('🌟 5×', 5), ('💎 10×', 10)]
     probs = [0.30, 0.05, 0.20, 0.25, 0.15, 0.03, 0.02]
     rand = random.random()
     cumulative = 0.0
@@ -128,7 +128,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
             chosen_label, chosen_mult = segments[i]
             break
     spin_animation = '🎡 ' + ' → '.join([s[0] for s in random.sample(segments, 4)]) + f' → <b>{chosen_label}</b>'
-    if chosen_mult == 0:
+    if chosen_label == '💀':
         outcome = _('game_lost').format(amount=0)
     else:
         outcome = _('game_won').format(amount=chosen_mult)
@@ -136,7 +136,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
         f"🎡 <b>{_('btn_game_wheel')}</b>\n"
         f"━━━━━━━━━━━━\n\n"
         f"{spin_animation}\n\n"
-        f"{'🎯' if chosen_mult > 0 else '💀'} {chosen_label}\n\n"
+        f"{'🎯' if chosen_label != '💀' else '💀'} {chosen_label}\n\n"
         f"{outcome}"
     )
     await message.answer(text, parse_mode='HTML')
@@ -479,7 +479,7 @@ async def game_wheel(callback: CallbackQuery, _: callable, db_session=None, db_u
     if db_user is None or db_session is None:
         await callback.answer(_('error_generic'), show_alert=True)
         return
-    segments = [('💀', 0), ('🟡 0.5×', 0), ('🟢 1.5×', 0), ('🔵 2×', 0), ('🟣 3×', 0), ('🌟 5×', 0), ('💎 10×', 0)]
+    segments = [('💀', 0), ('🟡 0.5×', 0.5), ('🟢 1.5×', 1.5), ('🔵 2×', 2), ('🟣 3×', 3), ('🌟 5×', 5), ('💎 10×', 10)]
     probs = [0.30, 0.05, 0.20, 0.25, 0.15, 0.03, 0.02]
     rand = random.random()
     cumulative = 0.0
@@ -490,7 +490,7 @@ async def game_wheel(callback: CallbackQuery, _: callable, db_session=None, db_u
             chosen_label, chosen_mult = segments[i]
             break
     spin_animation = '🎡 ' + ' → '.join([s[0] for s in random.sample(segments, 4)]) + f' → <b>{chosen_label}</b>'
-    if chosen_mult == 0:
+    if chosen_label == '💀':
         outcome = _('game_lost').format(amount=0)
     else:
         outcome = _('game_won').format(amount=chosen_mult)
@@ -498,7 +498,7 @@ async def game_wheel(callback: CallbackQuery, _: callable, db_session=None, db_u
         f"🎡 <b>{_('btn_game_wheel')}</b>\n"
         f"━━━━━━━━━━━━\n\n"
         f"{spin_animation}\n\n"
-        f"{'🎯' if chosen_mult > 0 else '💀'} {chosen_label}\n\n"
+        f"{'🎯' if chosen_label != '💀' else '💀'} {chosen_label}\n\n"
         f"{outcome}"
     )
     from bot.keyboards.main_menu import nav_kb
