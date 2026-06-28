@@ -328,5 +328,6 @@
   "time_minutes": "دقیقه",
   "loading": "⏳ در حال بارگذاری...",
   "no_data": "📭 داده‌ای یافت نشد.",
-  "page_info": "صفحه {page} از {total}"
+  "page_info": "صفحه {page} از {total}",
+  "btn_support": "💬 پشتیبانی"
 }
