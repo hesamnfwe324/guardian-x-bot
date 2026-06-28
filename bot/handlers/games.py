@@ -141,9 +141,9 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
 @router.message(Command('rps'))
 async def cmd_rps(message: Message, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    builder.button(text='🪨 سنگ', callback_data='rps:0:rock')
-    builder.button(text='📄 کاغذ', callback_data='rps:0:paper')
-    builder.button(text='✂️ قیچی', callback_data='rps:0:scissors')
+    builder.button(text='🪨 ◈ سنگ', callback_data='rps:0:rock')
+    builder.button(text='📄 ◈ کاغذ', callback_data='rps:0:paper')
+    builder.button(text='✂️ ◈ قیچی', callback_data='rps:0:scissors')
     builder.adjust(3)
     await message.answer(
         '✊ <b>سنگ کاغذ قیچی</b>\n━━━━━━━━━━━━\n\nانتخاب خود را بزنید!',
@@ -330,9 +330,9 @@ ROULETTE_RED = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 3
 @router.message(Command('roulette'))
 async def cmd_roulette(message: Message, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    builder.button(text='🔴 قرمز (+1.9x)', callback_data='roulette:red:0')
-    builder.button(text='⚫ سیاه (+1.9x)', callback_data='roulette:black:0')
-    builder.button(text='🟢 صفر (+35x)', callback_data='roulette:zero:0')
+    builder.button(text='🔴 ◈ قرمز (+1.9x)', callback_data='roulette:red:0')
+    builder.button(text='⚫ ◈ سیاه (+1.9x)', callback_data='roulette:black:0')
+    builder.button(text='🟢 ◈ صفر (+35x)', callback_data='roulette:zero:0')
     builder.adjust(2, 1)
     await message.answer(
         '🎰 <b>رولت</b>\n━━━━━━━━━━━━\n\nنوع شرط‌بندی خود را انتخاب کنید:',

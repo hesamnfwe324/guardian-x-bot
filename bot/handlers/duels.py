@@ -24,8 +24,8 @@ class DuelStates(StatesGroup):
 
 def duel_kb(duel_id: int, _: callable) -> object:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_accept_duel"), callback_data=f"duel_accept:{duel_id}")
-    builder.button(text=_("btn_decline_duel"), callback_data=f"duel_decline:{duel_id}")
+    builder.button(text="⚔️ ◈ قبول", callback_data=f"duel_accept:{duel_id}")
+    builder.button(text="❌ ◈ رد", callback_data=f"duel_decline:{duel_id}")
     builder.adjust(2)
     return builder.as_markup()
 
@@ -33,11 +33,11 @@ def duel_kb(duel_id: int, _: callable) -> object:
 @router.callback_query(F.data == "menu:duels")
 async def duels_menu(callback: CallbackQuery, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_new_duel"), callback_data="duel:new")
-    builder.button(text=_("btn_duel_history"), callback_data="duel:history")
-    builder.button(text=_("btn_duel_stats"), callback_data="duel:stats")
-    builder.button(text=_("btn_duel_rankings"), callback_data="duel:rankings")
-    builder.button(text=_("btn_back"), callback_data="menu:main")
+    builder.button(text="⚔️ ◈ دوئل جدید", callback_data="duel:new")
+    builder.button(text="📋 ◈ تاریخچه", callback_data="duel:history")
+    builder.button(text="📊 ◈ آمار", callback_data="duel:stats")
+    builder.button(text="🏆 ◈ رتبه‌بندی", callback_data="duel:rankings")
+    builder.button(text="🔙 ◈ بازگشت", callback_data="menu:main")
     builder.adjust(2, 2, 1)
     await callback.message.edit_text(_("duel_menu"), reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()

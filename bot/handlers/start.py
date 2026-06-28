@@ -14,8 +14,11 @@ router = Router()
 @router.message(CommandStart())
 async def cmd_start(message: Message, _: callable, db_session: AsyncSession = None, db_user=None, **kwargs):
     if message.chat.type != 'private':
+        title = message.chat.title or 'Group'
+        group_text = _('group_panel_title').replace('{title}', title)
         await message.answer(
-            '✅ ربات فعال است.\n\nبرای مدیریت گروه از دستور /help استفاده کنید.',
+            group_text,
+            parse_mode='HTML',
             reply_markup=group_main_menu_kb(_),
         )
         return
@@ -87,57 +90,34 @@ async def group_main_refresh(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:economy")
 async def menu_economy(callback: CallbackQuery, _: callable, **kwargs):
-    text = (
-        '💰 <b>اقتصاد</b>\n\n'
-        '/wallet — موجودی کیف‌پول\n'
-        '/daily — جایزه روزانه\n'
-        '/weekly — جایزه هفتگی\n'
-        '/monthly — جایزه ماهانه\n'
-        '/deposit — واریز به بانک\n'
-        '/withdraw — برداشت از بانک\n'
-        '/transfer — انتقال سکه\n'
-        '/referral — لینک دعوت\n'
-        '/achievements — دستاوردها\n'
-        '/transactions — تاریخچه تراکنش‌ها'
-    )
+    text = _('economy_menu')
+    from bot.keyboards.economy import economy_menu_kb
     from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=economy_menu_kb(_))
     await callback.answer()
 
 
 @router.callback_query(F.data == "menu:games")
 async def menu_games(callback: CallbackQuery, _: callable, **kwargs):
-    text = (
-        '🎮 <b>بازی‌ها</b>\n\n'
-        '/dice — 🎲 تاس هوشمند\n'
-        '/rps — ✊ سنگ کاغذ قیچی\n'
-        '/quiz — 🧠 کوئیز هوش\n'
-        '/wheel — 🎡 چرخ شانس\n'
-        '/numwar — 🔢 نبرد اعداد\n'
-        '/cards — 🃏 نبرد کارت\n'
-        '/treasure — 💎 شکار گنج\n'
-        '/mines — 💣 مین‌یاب\n'
-        '/roulette — 🎰 رولت\n'
-        '/duel — ⚔️ دوئل با کاربر دیگر\n'
-        '/stats — 📊 آمار بازی‌ها'
-    )
+    text = _('games_menu')
+    from bot.keyboards.games import games_menu_kb
     from bot.keyboards.main_menu import back_button_kb
-    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=games_menu_kb(_))
     await callback.answer()
 
 
 @router.callback_query(F.data == "menu:reputation")
 async def menu_reputation(callback: CallbackQuery, _: callable, db_session: AsyncSession = None, db_user=None, **kwargs):
-    text = '⭐ <b>سیستم اعتبار</b>\n\n'
+    text = '✨ ┌─────────────────────────┐\n  🌟 <b>سیستم اعتبار شیشه‌ای</b>\n✨ ┣━━━━━━━━━━━━━━━━━━━━━━━━━┫\n'
     if db_session and db_user:
         from sqlalchemy import select
         from bot.database.models import Reputation
         rep = await db_session.scalar(select(Reputation).where(Reputation.user_id == db_user.id))
         pos = rep.positive if rep else 0
         neg = rep.negative if rep else 0
-        text += f'👍 مثبت: <b>{pos}</b>\n👎 منفی: <b>{neg}</b>\n📊 خالص: <b>{pos - neg}</b>'
+        text += f'  👍 مثبت: <b>{pos}</b>\n  👎 منفی: <b>{neg}</b>\n  📊 خالص: <b>{pos - neg}</b>\n✨ └─────────────────────────┘'
     else:
-        text += _('no_data')
+        text += '  ' + _('no_data') + '\n✨ └─────────────────────────┘'
     from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
     await callback.answer()

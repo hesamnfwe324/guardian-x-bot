@@ -9,6 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.database.models import GroupSettings, WelcomeSettings
 from bot.keyboards.main_menu import nav_kb
 from bot.keyboards.settings import settings_menu_kb
+from bot.utils.glass_panel import glass_status, glass_lock_status
 import structlog
 
 logger = structlog.get_logger()
@@ -49,40 +50,40 @@ class WelcomeStates(StatesGroup):
 
 def welcome_kb(_, enabled=True):
     builder = InlineKeyboardBuilder()
-    icon = "✅" if enabled else "❌"
+    icon = glass_status(enabled)
     label = _("btn_enabled") if enabled else _("btn_disabled")
-    builder.button(text=f"{icon} {label}", callback_data="welcome:toggle")
-    builder.button(text=_("btn_set_welcome"),       callback_data="welcome:set")
-    builder.button(text=_("btn_welcome_variables"), callback_data="welcome:vars")
-    builder.button(text=_("btn_preview"),           callback_data="welcome:preview")
-    builder.button(text=_("btn_back"),              callback_data="settings:menu")
-    builder.button(text=_("btn_home"),              callback_data="menu:main")
+    builder.button(text=f"{icon} ◈ {label}", callback_data="welcome:toggle")
+    builder.button(text="📝 ◈ تنظیم پیام",       callback_data="welcome:set")
+    builder.button(text="🔖 ◈ متغیرها",           callback_data="welcome:vars")
+    builder.button(text="👁 ◈ پیش‌نمایش",          callback_data="welcome:preview")
+    builder.button(text="🔙 ◈ بازگشت",            callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه",              callback_data="menu:main")
     builder.adjust(1, 2, 1, 2)
     return builder.as_markup()
 
 
 def general_settings_kb(_, gs):
     builder = InlineKeyboardBuilder()
-    s = lambda v: "✅" if v else "❌"
-    builder.button(text=f"{s(gs.economy_enabled)} {_('btn_economy_toggle')}", callback_data="gs:eco")
-    builder.button(text=f"{s(gs.games_enabled)} {_('btn_games_toggle')}",     callback_data="gs:games")
-    builder.button(text=f"{s(gs.xp_enabled)} {_('btn_xp_toggle')}",           callback_data="gs:xp")
-    builder.button(text=f"{s(gs.reputation_enabled)} {_('btn_rep_toggle')}",  callback_data="gs:rep")
-    builder.button(text=f"{s(gs.silent_actions)} {_('btn_silent')}",           callback_data="gs:silent")
-    builder.button(text=_("btn_max_warns") + f" ({gs.max_warns})",             callback_data="gs:maxwarns")
-    builder.button(text=_("btn_warn_action") + f" ({gs.warn_action})",         callback_data="gs:warnaction")
-    builder.button(text=_("btn_back"),  callback_data="settings:menu")
-    builder.button(text=_("btn_home"),  callback_data="menu:main")
+    s = lambda v: glass_status(v)
+    builder.button(text=f"{s(gs.economy_enabled)} ◈ {_('btn_economy_toggle')}", callback_data="gs:eco")
+    builder.button(text=f"{s(gs.games_enabled)} ◈ {_('btn_games_toggle')}",     callback_data="gs:games")
+    builder.button(text=f"{s(gs.xp_enabled)} ◈ {_('btn_xp_toggle')}",           callback_data="gs:xp")
+    builder.button(text=f"{s(gs.reputation_enabled)} ◈ {_('btn_rep_toggle')}",  callback_data="gs:rep")
+    builder.button(text=f"{s(gs.silent_actions)} ◈ {_('btn_silent')}",           callback_data="gs:silent")
+    builder.button(text="⚠️ ◈ " + _("btn_max_warns") + f" ({gs.max_warns})",             callback_data="gs:maxwarns")
+    builder.button(text="🔨 ◈ " + _("btn_warn_action") + f" ({gs.warn_action})",         callback_data="gs:warnaction")
+    builder.button(text="🔙 ◈ بازگشت",  callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه",    callback_data="menu:main")
     builder.adjust(2, 2, 1, 2, 2)
     return builder.as_markup()
 
 
 def slowmode_kb(_):
     builder = InlineKeyboardBuilder()
-    for label, secs in [(_("btn_off"), 0), ("10s", 10), ("30s", 30), ("1m", 60), ("5m", 300), ("15m", 900), ("1h", 3600)]:
+    for label, secs in [("🔕 ◈ خاموش", 0), ("10s ◈", 10), ("30s ◈", 30), ("1m ◈", 60), ("5m ◈", 300), ("15m ◈", 900), ("1h ◈", 3600)]:
         builder.button(text=label, callback_data=f"slowmode:{secs}")
-    builder.button(text=_("btn_back"), callback_data="settings:menu")
-    builder.button(text=_("btn_home"), callback_data="menu:main")
+    builder.button(text="🔙 ◈ بازگشت", callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه", callback_data="menu:main")
     builder.adjust(4, 3, 2)
     return builder.as_markup()
 
@@ -166,10 +167,10 @@ async def toggle_welcome(callback: CallbackQuery, _: callable, db_session: Async
 @router.callback_query(F.data == "settings:goodbye")
 async def goodbye_menu(callback: CallbackQuery, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_set_goodbye"),    callback_data="goodbye:set")
-    builder.button(text=_("btn_toggle_goodbye"), callback_data="goodbye:toggle")
-    builder.button(text=_("btn_back"),           callback_data="settings:menu")
-    builder.button(text=_("btn_home"),           callback_data="menu:main")
+    builder.button(text="📝 ◈ تنظیم پیام",    callback_data="goodbye:set")
+    builder.button(text="🔓 ◈ روشن/خاموش", callback_data="goodbye:toggle")
+    builder.button(text="🔙 ◈ بازگشت",           callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه",           callback_data="menu:main")
     builder.adjust(2, 2)
     await callback.message.edit_text(_("goodbye_menu"), reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
@@ -190,12 +191,12 @@ async def log_channel_menu(callback: CallbackQuery, _: callable, db_session: Asy
     status = str(log_id) if log_id else _("not_set")
     text = _("log_channel_menu").format(channel_id=status)
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_set_log_channel"), callback_data="logs:set")
+    builder.button(text="📌 ◈ تنظیم کانال", callback_data="logs:set")
     if log_id:
-        builder.button(text=_("btn_remove_log_channel"), callback_data="logs:remove")
-    builder.button(text=_("btn_log_events"), callback_data="logs:events")
-    builder.button(text=_("btn_back"),       callback_data="settings:menu")
-    builder.button(text=_("btn_home"),       callback_data="menu:main")
+        builder.button(text="🗑 ◈ حذف کانال", callback_data="logs:remove")
+    builder.button(text="📋 ◈ رویدادها", callback_data="logs:events")
+    builder.button(text="🔙 ◈ بازگشت",       callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه",       callback_data="menu:main")
     builder.adjust(2, 1, 2)
     await callback.message.edit_text(text, reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
@@ -227,20 +228,20 @@ async def log_events_menu(callback: CallbackQuery, _: callable, db_session: Asyn
         gs = GroupSettings(group_id=db_group.id)
         db_session.add(gs)
         await db_session.flush()
-    s = lambda v: "✅" if v else "❌"
+    s = lambda v: glass_status(v)
     builder = InlineKeyboardBuilder()
     for txt, cb, field in [
-        (f"{s(gs.log_join)} {_('log_join')}",     "log:join",   "log_join"),
-        (f"{s(gs.log_leave)} {_('log_leave')}",   "log:leave",  "log_leave"),
-        (f"{s(gs.log_delete)} {_('log_delete')}", "log:delete", "log_delete"),
-        (f"{s(gs.log_edit)} {_('log_edit')}",     "log:edit",   "log_edit"),
-        (f"{s(gs.log_ban)} {_('log_ban')}",       "log:ban",    "log_ban"),
-        (f"{s(gs.log_mute)} {_('log_mute')}",     "log:mute",   "log_mute"),
-        (f"{s(gs.log_warn)} {_('log_warn')}",     "log:warn",   "log_warn"),
+        (f"{s(gs.log_join)} ◈ {_('log_join')}",     "log:join",   "log_join"),
+        (f"{s(gs.log_leave)} ◈ {_('log_leave')}",   "log:leave",  "log_leave"),
+        (f"{s(gs.log_delete)} ◈ {_('log_delete')}", "log:delete", "log_delete"),
+        (f"{s(gs.log_edit)} ◈ {_('log_edit')}",     "log:edit",   "log_edit"),
+        (f"{s(gs.log_ban)} ◈ {_('log_ban')}",       "log:ban",    "log_ban"),
+        (f"{s(gs.log_mute)} ◈ {_('log_mute')}",     "log:mute",   "log_mute"),
+        (f"{s(gs.log_warn)} ◈ {_('log_warn')}",     "log:warn",   "log_warn"),
     ]:
         builder.button(text=txt, callback_data=cb)
-    builder.button(text=_("btn_back"), callback_data="settings:logs")
-    builder.button(text=_("btn_home"), callback_data="menu:main")
+    builder.button(text="🔙 ◈ بازگشت", callback_data="settings:logs")
+    builder.button(text="🏠 ◈ خانه", callback_data="menu:main")
     builder.adjust(2, 2, 2, 1, 2)
     await callback.message.edit_text(_("log_events_menu"), reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
@@ -335,10 +336,10 @@ async def set_slowmode(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "settings:autodel")
 async def autodel_menu(callback: CallbackQuery, _: callable, **kwargs):
     builder = InlineKeyboardBuilder()
-    for label, secs in [(_("btn_off"), 0), ("30s", 30), ("1m", 60), ("5m", 300), ("10m", 600), ("30m", 1800)]:
+    for label, secs in [("🔕 ◈ خاموش", 0), ("30s ◈", 30), ("1m ◈", 60), ("5m ◈", 300), ("10m ◈", 600), ("30m ◈", 1800)]:
         builder.button(text=label, callback_data=f"autodel:{secs}")
-    builder.button(text=_("btn_back"), callback_data="settings:menu")
-    builder.button(text=_("btn_home"), callback_data="menu:main")
+    builder.button(text="🔙 ◈ بازگشت", callback_data="settings:menu")
+    builder.button(text="🏠 ◈ خانه", callback_data="menu:main")
     builder.adjust(3, 3, 2)
     await callback.message.edit_text(_("autodel_menu"), reply_markup=builder.as_markup(), parse_mode="HTML")
     await callback.answer()
