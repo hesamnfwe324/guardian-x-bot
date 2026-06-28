@@ -397,3 +397,55 @@ async def menu_economy(callback: CallbackQuery, _: callable, **kwargs):
     text = _('economy_menu')
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=economy_menu_kb(_))
     await callback.answer()
+
+
+@router.callback_query(F.data == "menu:rewards")
+async def menu_rewards(callback: CallbackQuery, _: callable, **kwargs):
+    from bot.keyboards.economy import rewards_menu_kb
+    text = _('rewards_center_title')
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=rewards_menu_kb(_))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "rewards:achievements")
+async def rewards_achievements(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
+    if not db_user:
+        await callback.answer(_("error_generic"), show_alert=True)
+        return
+    from bot.services.achievement_service import get_user_achievements
+    user_achs = await get_user_achievements(db_session, db_user.id)
+    text = _('achievements_menu') + '\n\n'
+    text += _('achievements_count').format(earned=len(user_achs), total=100) + '\n\n'
+    if user_achs:
+        for ua, ach in user_achs[:10]:
+            text += f'{ach.icon} <b>{ach.code}</b> — {ach.points} pts\n'
+    else:
+        text += _('no_data')
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=nav_kb(_, "menu:economy", "rewards:achievements"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "rewards:missions")
+async def rewards_missions(callback: CallbackQuery, _: callable, **kwargs):
+    from bot.keyboards.economy import missions_kb
+    text = _('btn_missions')
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=missions_kb(_))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "rewards:shop")
+async def rewards_shop(callback: CallbackQuery, _: callable, **kwargs):
+    from bot.keyboards.economy import shop_categories_kb
+    text = _('btn_shop')
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=shop_categories_kb(_))
+    await callback.answer()
+
+
+@router.callback_query(F.data.in_({"shop:badges", "shop:titles", "shop:frames", "shop:lootboxes", "shop:cosmetics"}))
+async def shop_category(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.answer(_("shop_coming"), show_alert=True)
+
+
+@router.callback_query(F.data.in_({"missions:daily", "missions:weekly", "missions:monthly"}))
+async def missions_category(callback: CallbackQuery, _: callable, **kwargs):
+    await callback.answer(_("missions_coming"), show_alert=True)
