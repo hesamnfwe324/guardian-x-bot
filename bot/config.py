@@ -1,51 +1,59 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, model_validator
-from typing import Optional
+  from pydantic import model_validator
+  from typing import Optional
 
 
-class Settings(BaseSettings):
-    BOT_TOKEN: str
-    WEBHOOK_URL: str = ""
-    WEBHOOK_SECRET: str = "guardian_x_secret"
-    WEBHOOK_PORT: int = 8080
-    WEBHOOK_PATH: str = "/webhook"
+  class Settings(BaseSettings):
+      # Required at runtime — must be set in Render environment variables
+      BOT_TOKEN: str = ""
+      DATABASE_URL: str = ""
 
-    DATABASE_URL: str
-    REDIS_URL: str = "redis://localhost:6379/0"
+      WEBHOOK_URL: str = ""
+      WEBHOOK_SECRET: str = "guardian_x_secret"
+      WEBHOOK_PORT: int = 8080
+      WEBHOOK_PATH: str = "/webhook"
 
-    BOT_OWNER_ID: int = 0
-    LOG_LEVEL: str = "INFO"
-    ENVIRONMENT: str = "production"
+      REDIS_URL: str = "redis://localhost:6379/0"
 
-    SENTRY_DSN: Optional[str] = None
-    MAX_CONNECTIONS: int = 10
-    POOL_SIZE: int = 5
+      BOT_OWNER_ID: int = 0
+      LOG_LEVEL: str = "INFO"
+      ENVIRONMENT: str = "production"
 
-    DAILY_REWARD: int = 100
-    WEEKLY_REWARD: int = 500
-    MONTHLY_REWARD: int = 2000
-    REFERRAL_REWARD: int = 150
-    ACTIVITY_XP_PER_MSG: int = 2
-    MAX_WARN_COUNT: int = 3
-    FLOOD_LIMIT: int = 5
-    FLOOD_WINDOW: int = 10
+      SENTRY_DSN: Optional[str] = None
+      MAX_CONNECTIONS: int = 10
+      POOL_SIZE: int = 5
 
-    SUPPORTED_LANGUAGES: list[str] = ["en", "fa", "ar", "tr", "ru", "es", "fr", "de"]
-    DEFAULT_LANGUAGE: str = "en"
+      DAILY_REWARD: int = 100
+      WEEKLY_REWARD: int = 500
+      MONTHLY_REWARD: int = 2000
+      REFERRAL_REWARD: int = 150
+      ACTIVITY_XP_PER_MSG: int = 2
+      MAX_WARN_COUNT: int = 3
+      FLOOD_LIMIT: int = 5
+      FLOOD_WINDOW: int = 10
 
-    @model_validator(mode="after")
-    def fix_database_url(self) -> "Settings":
-        url = self.DATABASE_URL
-        if url.startswith("postgres://"):
-            url = "postgresql+asyncpg://" + url[len("postgres://"):]
-        elif url.startswith("postgresql://"):
-            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
-        self.DATABASE_URL = url
-        return self
+      SUPPORTED_LANGUAGES: list[str] = ["en", "fa", "ar", "tr", "ru", "es", "fr", "de"]
+      DEFAULT_LANGUAGE: str = "en"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+      @model_validator(mode="after")
+      def fix_database_url(self) -> "Settings":
+          url = self.DATABASE_URL
+          if url.startswith("postgres://"):
+              url = "postgresql+asyncpg://" + url[len("postgres://"):]
+          elif url.startswith("postgresql://"):
+              url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+          self.DATABASE_URL = url
+          return self
+
+      @property
+      def is_configured(self) -> bool:
+          """True only when all required runtime secrets are provided."""
+          return bool(self.BOT_TOKEN and self.DATABASE_URL)
+
+      class Config:
+          env_file = ".env"
+          case_sensitive = True
 
 
-settings = Settings()
+  settings = Settings()
+  
