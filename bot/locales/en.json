@@ -259,5 +259,17 @@
   "game_won": "🎉 You won <b>{amount}</b> coins!",
   "game_lost": "😢 You lost <b>{amount}</b> coins.",
   "game_draw": "🤝 It's a draw!",
-  "no_active_group": "❌ No active group context. Use this in a group."
+  "no_active_group": "❌ No active group context. Use this in a group.",
+  "transactions_title": "📋 <b>Recent Transactions</b>",
+  "referral_title": "👥 <b>Referral Program</b>",
+  "referral_desc": "Invite friends and earn <b>{reward} coins</b> per referral!",
+  "referral_link": "Your referral link",
+  "rewards_center_title": "🎁 <b>Rewards Center</b>",
+  "bank_title": "🏦 <b>Bank</b>",
+  "bank_hint": "Use <b>Deposit</b> to move coins to the bank (safe from theft).\nUse <b>Withdraw</b> to move coins back to your wallet.",
+  "transfer_title": "↗️ <b>Transfer Coins</b>",
+  "transfer_enter_user": "↗️ <b>Transfer Coins</b>\n\nEnter the @username or user ID to transfer to:",
+  "transfer_enter_amount": "✅ Transferring to <b>{name}</b>. Now enter the amount:",
+  "transfer_user_not_found": "❌ User not found. Try again with a valid @username or user ID.",
+  "transfer_success": "✅ Transferred <b>{amount}</b> coins to <b>{name}</b>!\nYour new balance: <b>{balance}</b>"
 }
