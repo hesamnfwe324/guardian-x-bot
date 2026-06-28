@@ -1,13 +1,10 @@
 {
   "lang_name": "🇬🇧 English",
   "lang_code": "en",
-
   "select_language": "🌍 Please select your language:",
   "language_set": "✅ Language set to English!",
-
   "welcome_bot": "👋 Welcome to <b>GUARDIAN X ULTIMATE</b>!\n\nI am your all-in-one group management bot.\nUse the menu below to explore all features.",
   "main_menu": "🏠 <b>Main Menu</b>\nChoose a category:",
-
   "btn_security": "🛡️ Security",
   "btn_moderation": "⚖️ Moderation",
   "btn_channel": "📢 Channel Tools",
@@ -35,7 +32,6 @@
   "btn_save": "💾 Save",
   "btn_reset": "🔄 Reset",
   "btn_refresh": "🔃 Refresh",
-
   "security_menu": "🛡️ <b>Security Settings</b>\n\nConfigure protection for your group:",
   "btn_anti_spam": "🚫 Anti Spam",
   "btn_anti_flood": "🌊 Anti Flood",
@@ -61,7 +57,6 @@
   "btn_locks": "🔒 Lock System",
   "btn_advanced_protection": "⚔️ Advanced Protection",
   "btn_emergency": "🚨 Emergency Mode",
-
   "anti_spam_title": "🚫 <b>Anti Spam</b>",
   "anti_spam_desc": "Automatically detect and punish spam messages.\n\nAction: <code>{action}</code>\nStatus: {status}",
   "anti_flood_title": "🌊 <b>Anti Flood</b>",
@@ -72,14 +67,12 @@
   "btn_action_mute": "🔇 Mute",
   "btn_action_kick": "👟 Kick",
   "btn_action_ban": "🔨 Ban",
-
   "captcha_menu": "🔐 <b>Captcha Settings</b>\nStatus: {status}",
   "btn_captcha_button": "🖱️ Button Captcha",
   "btn_captcha_math": "🔢 Math Captcha",
   "btn_captcha_question": "❓ Question Captcha",
   "captcha_set": "✅ Captcha type set to: {type}",
   "captcha_timeout": "⏱️ Timeout: {seconds} seconds",
-
   "lock_menu": "🔒 <b>Lock System</b>\nLocked content types:",
   "btn_lock_text": "📝 Text",
   "btn_lock_links": "🔗 Links",
@@ -100,7 +93,6 @@
   "btn_lock_mentions": "📣 Mentions",
   "btn_lock_hashtags": "#️⃣ Hashtags",
   "lock_toggled": "{type} is now {status}",
-
   "moderation_menu": "⚖️ <b>Moderation</b>\nSelect an action:",
   "btn_ban": "🔨 Ban",
   "btn_unban": "🔓 Unban",
@@ -116,7 +108,6 @@
   "btn_roles": "👑 Custom Roles",
   "btn_strike": "⚡ Strike System",
   "btn_admin_permissions": "🔑 Admin Permissions",
-
   "provide_user": "👤 Reply to a user's message or provide their username/ID:",
   "user_banned": "🔨 <b>Banned</b> {name}\nReason: {reason}",
   "user_unbanned": "🔓 <b>Unbanned</b> {name}",
@@ -127,7 +118,6 @@
   "user_unwarned": "↩️ <b>Warning removed</b> for {name}",
   "max_warns_reached": "🚨 {name} has reached the maximum number of warnings! Action: {action}",
   "no_reason": "No reason provided",
-
   "user_history_title": "📜 <b>History: {name}</b>",
   "history_warnings": "⚠️ Warnings: {count}",
   "history_mutes": "🔇 Mutes: {count}",
@@ -135,7 +125,6 @@
   "history_kicks": "👟 Kicks: {count}",
   "history_messages": "💬 Messages: {count}",
   "history_joined": "📅 Joined: {date}",
-
   "economy_menu": "💰 <b>Economy</b>",
   "wallet_title": "👛 <b>Your Wallet</b>",
   "balance": "💵 Balance: <code>{amount}</code> coins",
@@ -151,7 +140,6 @@
   "btn_monthly": "🗓️ Monthly Reward",
   "btn_referral": "👥 Referral",
   "btn_transactions": "📋 Transactions",
-
   "daily_reward": "✅ You claimed your daily reward: <b>+{amount} coins</b>!",
   "weekly_reward": "✅ You claimed your weekly reward: <b>+{amount} coins</b>!",
   "monthly_reward": "✅ You claimed your monthly reward: <b>+{amount} coins</b>!",
@@ -163,7 +151,6 @@
   "enter_amount": "💰 Enter the amount:",
   "enter_user": "👤 Enter the user (reply or @username):",
   "invalid_amount": "❌ Invalid amount. Enter a positive number.",
-
   "level_menu": "⭐ <b>Level System</b>",
   "your_level": "Your Level: <b>{level}</b>",
   "your_xp": "XP: <code>{xp}/{next_xp}</code>",
@@ -171,7 +158,6 @@
   "level_up": "🎉 Congratulations {name}! You reached <b>Level {level}</b>!",
   "btn_leaderboard": "🏆 Leaderboard",
   "btn_level_rewards": "🎁 Level Rewards",
-
   "reputation_menu": "🌟 <b>Reputation</b>",
   "your_rep": "Your Reputation: <b>+{pos} / -{neg}</b>",
   "rep_given": "✅ Reputation given to {name}!",
@@ -179,7 +165,6 @@
   "btn_give_rep_pos": "👍 Give +Rep",
   "btn_give_rep_neg": "👎 Give -Rep",
   "btn_rep_rankings": "🏆 Rep Rankings",
-
   "games_menu": "🎮 <b>Games</b>\nChoose a game to play:",
   "btn_dice": "🎲 Smart Dice",
   "btn_quiz": "🧠 Quiz Battle AI",
@@ -191,7 +176,6 @@
   "btn_mines": "💣 Mines Challenge",
   "btn_chess": "♟️ Chess Mini",
   "btn_roulette": "🎰 Safe Russian Roulette",
-
   "dice_menu": "🎲 <b>Smart Dice</b>\nChoose a mode:",
   "btn_classic_dice": "🎲 Classic Dice",
   "btn_prediction_dice": "🔮 Prediction Dice",
@@ -203,7 +187,6 @@
   "btn_daily_challenge": "📅 Daily Challenge",
   "btn_dice_streak": "🔥 Dice Streak",
   "btn_vip_arena": "👑 VIP Arena",
-
   "game_bet_prompt": "💰 Enter your bet (min: {min}, max: {max}) or 0 to play free:",
   "game_started": "🎮 Game started! Good luck!",
   "game_won": "🎉 You won <b>{amount} coins</b>!",
@@ -220,7 +203,6 @@
   "btn_game_stats": "📊 My Stats",
   "btn_game_history": "📋 History",
   "btn_game_rankings": "🏆 Rankings",
-
   "duel_menu": "⚔️ <b>Duels</b>",
   "btn_new_duel": "⚔️ Challenge",
   "btn_duel_history": "📋 Duel History",
@@ -233,7 +215,6 @@
   "duel_declined": "❌ Duel declined.",
   "duel_expired": "⏰ Duel challenge expired.",
   "duel_won": "🏆 {winner} wins the duel and gets {amount} coins!",
-
   "tournament_menu": "🏆 <b>Tournaments</b>",
   "btn_active_tournaments": "▶️ Active Tournaments",
   "btn_create_tournament": "➕ Create Tournament",
@@ -244,20 +225,17 @@
   "tournament_started": "🏆 Tournament <b>{name}</b> has started!",
   "tournament_ended": "🎉 Tournament <b>{name}</b> ended!\nWinner: {winner}",
   "tournament_full": "❌ Tournament is full.",
-
   "achievements_menu": "🏅 <b>Achievements</b>",
   "btn_my_achievements": "🏅 My Achievements",
   "btn_all_achievements": "📋 All Achievements",
   "achievement_earned": "🏅 Achievement Unlocked: <b>{name}</b>!\n{description}\nReward: +{coins} coins, +{xp} XP",
   "achievements_count": "Achievements: {earned}/{total}",
-
   "missions_menu": "📋 <b>Missions</b>",
   "btn_daily_missions": "📅 Daily Missions",
   "btn_weekly_missions": "📆 Weekly Missions",
   "btn_monthly_missions": "🗓️ Monthly Missions",
   "mission_completed": "✅ Mission Complete: <b>{name}</b>!\nReward: +{coins} coins, +{xp} XP",
   "mission_progress": "{name}: {progress}/{required}",
-
   "shop_menu": "🛒 <b>Reward Shop</b>",
   "btn_badges": "🏷️ Badges",
   "btn_titles": "👑 Titles",
@@ -267,7 +245,6 @@
   "buy_success": "✅ Purchased: <b>{item}</b> for <b>{price} coins</b>!",
   "buy_failed": "❌ Purchase failed.",
   "item_equipped": "✅ <b>{item}</b> equipped!",
-
   "stats_menu": "📊 <b>Statistics</b>",
   "btn_active_members": "👥 Active Members",
   "btn_top_active": "🏆 Most Active",
@@ -283,7 +260,6 @@
   "btn_most_wins": "🏆 Most Wins",
   "btn_top_rep": "🌟 Top Reputation",
   "btn_top_groups": "👥 Top Groups",
-
   "settings_menu": "⚙️ <b>Settings</b>",
   "btn_welcome": "👋 Welcome System",
   "btn_log_channel": "📋 Log Channel",
@@ -294,7 +270,6 @@
   "btn_welcome_variables": "🔤 Available Variables",
   "welcome_set": "✅ Welcome message updated!",
   "welcome_variables": "Available variables:\n{name} - User name\n{username} - Username\n{id} - User ID\n{group} - Group name",
-
   "help_menu": "❓ <b>Help Center</b>",
   "btn_help_security": "🛡️ Security Help",
   "btn_help_moderation": "⚖️ Moderation Help",
@@ -305,7 +280,6 @@
   "help_moderation_text": "⚖️ <b>Moderation Help</b>\n\nAll moderation actions require admin privileges.\n\n/ban @user [reason] - Ban a user\n/unban @user - Unban a user\n/kick @user - Kick a user\n/mute @user [time] - Mute a user\n/unmute @user - Unmute a user\n/warn @user [reason] - Warn a user\n/unwarn @user - Remove a warning",
   "help_economy_text": "💰 <b>Economy Help</b>\n\nEarn virtual coins by:\n• Claiming daily/weekly/monthly rewards\n• Being active in the group\n• Winning games and duels\n• Completing missions\n• Referring new users\n\nSpend coins in the Reward Shop.",
   "help_games_text": "🎮 <b>Games Help</b>\n\nAll games support PvP, coin betting, and rankings.\n\nUse /play or the Games menu to start a game.\nBet coins to win more, or play free to practice.",
-
   "owner_panel": "👑 <b>Owner Panel</b>",
   "btn_broadcast": "📢 Global Broadcast",
   "btn_user_stats": "📊 User Stats",
@@ -318,7 +292,6 @@
   "maintenance_off": "✅ Maintenance mode disabled.",
   "total_users": "👥 Total Users: {count}",
   "total_groups": "📱 Total Groups: {count}",
-
   "error_not_admin": "❌ You must be an admin to use this.",
   "error_not_owner": "❌ Only the bot owner can use this.",
   "error_private_only": "❌ This command can only be used in private chat.",
@@ -327,7 +300,6 @@
   "error_generic": "❌ An error occurred. Please try again.",
   "error_no_permission": "❌ Insufficient permissions.",
   "error_maintenance": "🔧 Bot is under maintenance. Please try again later.",
-
   "joined_group": "✅ {name} joined the group.",
   "left_group": "👋 {name} left the group.",
   "verification_required": "🔐 Please verify you're human by clicking the button below.",
@@ -340,7 +312,6 @@
   "raid_detected": "⚠️ Raid detected! Anti-Raid protection activated.",
   "emergency_activated": "🚨 Emergency Protection Mode activated!",
   "emergency_deactivated": "✅ Emergency Protection Mode deactivated.",
-
   "rank": "#{rank}",
   "coins": "{amount} coins",
   "level_short": "Lv.{level}",
