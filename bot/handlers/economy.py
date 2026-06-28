@@ -25,7 +25,7 @@ class EconomyStates(StatesGroup):
     waiting_transfer_amount = State()
 
 
-# ──── /wallet  /balance ──────────────────────────────────────────
+#  /wallet  /balance 
 @router.message(Command('wallet', 'balance', 'economy', 'eco'))
 async def cmd_wallet(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     balance, bank = await get_balance(db_session, db_user.id)
@@ -39,7 +39,7 @@ async def cmd_wallet(message: Message, _: callable, db_session: AsyncSession, db
     await message.reply(text, parse_mode='HTML')
 
 
-# ──── /daily ─────────────────────────────────────────────────────
+#  /daily 
 @router.message(Command('daily'))
 async def cmd_daily(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     success, amount, next_claim = await claim_daily_reward(db_session, db_user.id)
@@ -50,7 +50,7 @@ async def cmd_daily(message: Message, _: callable, db_session: AsyncSession, db_
         await message.reply(_('reward_cooldown').format(type='daily', time=time_str))
 
 
-# ──── /weekly ────────────────────────────────────────────────────
+#  /weekly 
 @router.message(Command('weekly'))
 async def cmd_weekly(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     success, amount, next_claim = await claim_weekly_reward(db_session, db_user.id)
@@ -61,7 +61,7 @@ async def cmd_weekly(message: Message, _: callable, db_session: AsyncSession, db
         await message.reply(_('reward_cooldown').format(type='weekly', time=time_str))
 
 
-# ──── /monthly ───────────────────────────────────────────────────
+#  /monthly 
 @router.message(Command('monthly'))
 async def cmd_monthly(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     success, amount, next_claim = await claim_monthly_reward(db_session, db_user.id)
@@ -72,7 +72,7 @@ async def cmd_monthly(message: Message, _: callable, db_session: AsyncSession, d
         await message.reply(_('reward_cooldown').format(type='monthly', time=time_str))
 
 
-# ──── /deposit ───────────────────────────────────────────────────
+#  /deposit 
 @router.message(Command('deposit'))
 async def cmd_deposit(message: Message, _: callable, state: FSMContext, **kwargs):
     await state.set_state(EconomyStates.waiting_deposit)
@@ -97,7 +97,7 @@ async def process_deposit(message: Message, _: callable, db_session: AsyncSessio
     await state.clear()
 
 
-# ──── /withdraw ──────────────────────────────────────────────────
+#  /withdraw 
 @router.message(Command('withdraw'))
 async def cmd_withdraw(message: Message, _: callable, state: FSMContext, **kwargs):
     await state.set_state(EconomyStates.waiting_withdraw)
@@ -122,7 +122,7 @@ async def process_withdraw(message: Message, _: callable, db_session: AsyncSessi
     await state.clear()
 
 
-# ──── /transfer ──────────────────────────────────────────────────
+#  /transfer 
 @router.message(Command('transfer'))
 async def cmd_transfer(message: Message, _: callable, state: FSMContext, **kwargs):
     await state.set_state(EconomyStates.waiting_transfer_user)
@@ -171,7 +171,7 @@ async def process_transfer_amount(message: Message, _: callable, db_session: Asy
     await state.clear()
 
 
-# ──── /referral ──────────────────────────────────────────────────
+#  /referral 
 @router.message(Command('referral', 'ref'))
 async def cmd_referral(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     from bot.config import settings
@@ -186,7 +186,7 @@ async def cmd_referral(message: Message, _: callable, db_session: AsyncSession, 
     await message.reply(text, parse_mode='HTML')
 
 
-# ──── /achievements ─────────────────────────────────────────────
+#  /achievements 
 @router.message(Command('achievements'))
 async def cmd_achievements(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     from bot.services.achievement_service import get_user_achievements
@@ -201,7 +201,7 @@ async def cmd_achievements(message: Message, _: callable, db_session: AsyncSessi
     await message.reply(text, parse_mode='HTML')
 
 
-# ──── /transactions ──────────────────────────────────────────────
+#  /transactions 
 @router.message(Command('transactions', 'tx'))
 async def cmd_transactions(message: Message, _: callable, db_session: AsyncSession, db_user, **kwargs):
     txs = await get_transactions(db_session, db_user.id, limit=10)
@@ -215,10 +215,9 @@ async def cmd_transactions(message: Message, _: callable, db_session: AsyncSessi
     await message.reply(text, parse_mode='HTML')
 
 
-# ─────
+#
 # ECONOMY CALLBACK HANDLERS — Make inline buttons fully functional
-# ─────
-
+#
 @router.callback_query(F.data == "eco:wallet")
 async def eco_wallet(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
     if not db_user:

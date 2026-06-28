@@ -9,7 +9,6 @@ def _lock_icon(locked: bool) -> str:
     return "🔒" if locked else "🔓"
 
 
-
 def security_menu_kb(_: Callable, security: SecuritySettings) -> InlineKeyboardMarkup:
     """Beautiful i18n security menu with status indicators."""
     builder = InlineKeyboardBuilder()

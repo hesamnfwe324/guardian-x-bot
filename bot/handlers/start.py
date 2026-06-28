@@ -66,7 +66,7 @@ async def cmd_language(message: Message, _: callable, **kwargs):
     await message.answer(_('select_language'), reply_markup=language_selection_kb())
 
 
-# ─── Main menu navigation ─────────────────────────────────
+#  Main menu navigation 
 
 @router.callback_query(F.data == "menu:main")
 async def main_menu_back(callback: CallbackQuery, _: callable, **kwargs):
@@ -122,11 +122,7 @@ async def menu_language(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:channel")
 async def menu_channel(callback: CallbackQuery, _: callable, **kwargs):
-    text = (
-        f"
-        f"  {_('channel_info_text')}\n\n"
-        f"
-    )
+    text = f"  {_('channel_info_text')}\n\n"
     from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
     await callback.answer()

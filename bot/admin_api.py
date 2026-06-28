@@ -327,8 +327,6 @@ async def broadcast_handler(request):
         return web.json_response({"sent": 0, "failed": 0, "total": 0}, status=500)
 
 
-
-
 @require_admin
 async def twa_profile_handler(request):
     try:

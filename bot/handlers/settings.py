@@ -18,7 +18,7 @@ logger = structlog.get_logger()
 router = Router()
 
 
-# ──── /settings ────────────────────────────────────────────────────
+#  /settings 
 @router.message(Command('settings'))
 async def cmd_settings(message: Message, _: callable, **kwargs):
     if message.chat.type == 'private':

@@ -35,7 +35,7 @@ async def _is_admin(message_or_callback, _) -> bool:
     return True
 
 
-# ─── /security ────────────────────────────────────────────
+#  /security 
 @router.message(Command('security'))
 async def cmd_security(message: Message, _: callable, db_session: AsyncSession = None, **kwargs):
     if message.chat.type == 'private':
@@ -184,7 +184,7 @@ async def toggle_captcha(callback: CallbackQuery, _: callable, db_session: Async
     await callback.message.edit_reply_markup(reply_markup=captcha_menu_kb(_, security))
 
 
-# ─── /lock /unlock ────────────────────────────────────────
+#  /lock /unlock 
 @router.message(Command('lock', 'unlock'))
 async def cmd_lock(message: Message, _: callable, db_session: AsyncSession = None, **kwargs):
     if message.chat.type == 'private':

@@ -147,7 +147,7 @@ async def my_stats(callback: CallbackQuery, _: callable, db_session: AsyncSessio
     wins = (ds.wins if ds else 0) or 0
     losses = (ds.losses if ds else 0) or 0
     xp_needed = level * 100
-    bar = progress_bar(xp, xp_needed) if xp_needed else "─" * 10
+    bar = progress_bar(xp, xp_needed) if xp_needed else "" * 10
     wr = int(wins / max(wins + losses, 1) * 100)
     name = db_user.first_name or safe_username(db_user)
     text = _("my_stats_text").format(
