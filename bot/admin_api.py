@@ -327,6 +327,153 @@ import json
           return web.json_response({"sent": 0, "failed": 0, "total": 0}, status=500)
 
 
+  
+
+  @require_admin
+  async def twa_profile_handler(request):
+      try:
+          user_id = int(request.rel_url.query.get("userId", 0))
+          async with async_session_maker() as session:
+              from sqlalchemy import select, func, desc
+              user = await session.get(User, user_id)
+              if not user:
+                  return web.json_response({"error": "User not found"}, status=404)
+              wallet_res = await session.execute(select(Wallet).where(Wallet.user_id == user_id))
+              wallet = wallet_res.scalar_one_or_none()
+              econ_res = await session.execute(select(Economy).where(Economy.user_id == user_id))
+              economy = econ_res.scalar_one_or_none()
+              # Get rank
+              rank_res = await session.scalar(
+                  select(func.count()).select_from(Wallet).where(
+                      Wallet.balance > (wallet.balance if wallet else 0)
+                  )
+              )
+              rank = (rank_res or 0) + 1
+              # Daily/weekly availability
+              now = datetime.utcnow()
+              daily_avail = True
+              weekly_avail = True
+              if wallet:
+                  if wallet.last_daily and (now - wallet.last_daily.replace(tzinfo=None)).total_seconds() < 86400:
+                      daily_avail = False
+                  if wallet.last_weekly and (now - wallet.last_weekly.replace(tzinfo=None)).total_seconds() < 7 * 86400:
+                      weekly_avail = False
+              return web.json_response({
+                  "userId": str(user.id),
+                  "username": user.username,
+                  "firstName": user.first_name,
+                  "lastName": user.last_name,
+                  "balance": wallet.balance if wallet else 0,
+                  "bankBalance": wallet.bank_balance if wallet else 0,
+                  "level": economy.level if economy else 1,
+                  "xp": economy.xp if economy else 0,
+                  "totalXp": economy.total_xp if economy else 0,
+                  "rank": rank,
+                  "isPremium": user.is_premium,
+                  "isBanned": user.is_banned,
+                  "language": user.language,
+                  "dailyAvailable": daily_avail,
+                  "weeklyAvailable": weekly_avail,
+                  "streakDays": economy.streak_days if economy else 0,
+                  "referralCount": economy.referral_count if economy else 0,
+                  "createdAt": user.created_at.isoformat() if user.created_at else None,
+              })
+      except Exception as e:
+          return web.json_response({"error": str(e)}, status=500)
+
+
+  @require_admin
+  async def twa_leaderboard_handler(request):
+      try:
+          limit = min(int(request.rel_url.query.get("limit", 20)), 50)
+          async with async_session_maker() as session:
+              from sqlalchemy import select, desc
+              result = await session.execute(
+                  select(User, Wallet, Economy)
+                  .join(Wallet, Wallet.user_id == User.id)
+                  .outerjoin(Economy, Economy.user_id == User.id)
+                  .order_by(desc(Wallet.balance))
+                  .limit(limit)
+              )
+              rows = result.all()
+              data = []
+              for i, (user, wallet, economy) in enumerate(rows):
+                  data.append({
+                      "rank": i + 1,
+                      "userId": str(user.id),
+                      "username": user.username,
+                      "firstName": user.first_name,
+                      "balance": wallet.balance if wallet else 0,
+                      "level": economy.level if economy else 1,
+                      "xp": economy.total_xp if economy else 0,
+                      "isPremium": user.is_premium,
+                  })
+              return web.json_response(data)
+      except Exception as e:
+          return web.json_response([])
+
+
+  @require_admin
+  async def twa_claim_handler(request):
+      try:
+          body = await request.json()
+          user_id = int(body.get("userId", 0))
+          claim_type = body.get("type", "daily")
+          async with async_session_maker() as session:
+              wallet_res = await session.execute(select(Wallet).where(Wallet.user_id == user_id))
+              wallet = wallet_res.scalar_one_or_none()
+              if not wallet:
+                  return web.json_response({"success": False, "message": "User not found in bot", "amount": 0, "nextAvailableAt": None})
+              now = datetime.utcnow()
+              from bot.config import settings
+              if claim_type == "weekly":
+                  if wallet.last_weekly and (now - wallet.last_weekly.replace(tzinfo=None)).total_seconds() < 7 * 86400:
+                      next_at = (wallet.last_weekly.replace(tzinfo=None) + __import__('datetime').timedelta(days=7)).isoformat()
+                      return web.json_response({"success": False, "message": "Weekly reward not available yet", "amount": 0, "nextAvailableAt": next_at})
+                  amount = settings.WEEKLY_REWARD
+                  wallet.balance += amount
+                  wallet.last_weekly = now
+              else:
+                  if wallet.last_daily and (now - wallet.last_daily.replace(tzinfo=None)).total_seconds() < 86400:
+                      next_at = (wallet.last_daily.replace(tzinfo=None) + __import__('datetime').timedelta(days=1)).isoformat()
+                      return web.json_response({"success": False, "message": "Daily reward not available yet", "amount": 0, "nextAvailableAt": next_at})
+                  amount = settings.DAILY_REWARD
+                  wallet.balance += amount
+                  wallet.last_daily = now
+              await session.commit()
+              next_at = (now + __import__('datetime').timedelta(days=7 if claim_type == "weekly" else 1)).isoformat()
+              return web.json_response({"success": True, "message": f"{'Weekly' if claim_type == 'weekly' else 'Daily'} reward claimed! +{amount} coins", "amount": amount, "nextAvailableAt": next_at})
+      except Exception as e:
+          return web.json_response({"success": False, "message": str(e), "amount": 0, "nextAvailableAt": None}, status=500)
+
+
+  @require_admin
+  async def twa_game_stats_handler(request):
+      try:
+          user_id = int(request.rel_url.query.get("userId", 0))
+          async with async_session_maker() as session:
+              from bot.database.models import DuelStats, GameStats as GameStatsModel
+              try:
+                  duel_res = await session.execute(select(DuelStats).where(DuelStats.user_id == user_id))
+                  duel = duel_res.scalar_one_or_none()
+                  game_res = await session.execute(select(GameStatsModel).where(GameStatsModel.user_id == user_id))
+                  game = game_res.scalar_one_or_none()
+                  won = duel.wins if duel else 0
+                  lost = duel.losses if duel else 0
+                  total = won + lost
+                  return web.json_response({
+                      "userId": str(user_id),
+                      "duelsWon": won,
+                      "duelsLost": lost,
+                      "gamesPlayed": game.total_games if game else 0,
+                      "totalWinnings": duel.total_won if duel else 0,
+                      "winRate": round(won / total * 100, 1) if total > 0 else 0,
+                  })
+              except Exception:
+                  return web.json_response({"userId": str(user_id), "duelsWon": 0, "duelsLost": 0, "gamesPlayed": 0, "totalWinnings": 0, "winRate": 0})
+      except Exception as e:
+          return web.json_response({"error": str(e)}, status=500)
+
   def setup_admin_routes(app):
       app.router.add_get("/admin/stats", stats_handler)
       app.router.add_get("/admin/users", users_handler)
@@ -336,4 +483,8 @@ import json
       app.router.add_get("/admin/economy/leaderboard", economy_leaderboard_handler)
       app.router.add_get("/admin/logs", logs_handler)
       app.router.add_post("/admin/broadcast", broadcast_handler)
+      app.router.add_get("/admin/twa/profile", twa_profile_handler)
+      app.router.add_get("/admin/twa/leaderboard", twa_leaderboard_handler)
+      app.router.add_post("/admin/twa/claim", twa_claim_handler)
+      app.router.add_get("/admin/twa/game-stats", twa_game_stats_handler)
   
