@@ -13,12 +13,12 @@ router = Router()
 
 def tournaments_kb(_):
     builder = InlineKeyboardBuilder()
-    builder.button(text="🟢 ◈ تورنمنت‌های فعال",  callback_data="trn:active")
-    builder.button(text="👤 ◈ تورنمنت‌های من",      callback_data="trn:mine")
-    builder.button(text="📜 ◈ تاریخچه",  callback_data="trn:history")
-    builder.button(text="🏆 ◈ رتبه‌بندی", callback_data="trn:rankings")
-    builder.button(text="🔙 ◈ بازگشت",  callback_data="menu:main")
-    builder.button(text="🏠 ◈ خانه",  callback_data="menu:main")
+    builder.button(text=_("btn_active_tournaments"),    callback_data="trn:active")
+    builder.button(text=_("btn_my_tournaments"),        callback_data="trn:mine")
+    builder.button(text=_("btn_tournament_history"),    callback_data="trn:history")
+    builder.button(text=_("btn_tournament_rankings"),   callback_data="trn:rankings")
+    builder.button(text=_("btn_back"),                  callback_data="menu:main")
+    builder.button(text=_("btn_home"),                  callback_data="menu:main")
     builder.adjust(2, 2, 2)
     return builder.as_markup()
 
