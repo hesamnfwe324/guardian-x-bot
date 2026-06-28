@@ -298,3 +298,4 @@ Key settings in `bot/config.py`:
 ## 📜 License
 
 MIT License — free to use and modify.
+# Guardian X Bot - Deploy trigger
