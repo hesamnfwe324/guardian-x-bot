@@ -122,6 +122,7 @@ async def save_welcome_message(message: Message, _: callable, db_session: AsyncS
         db_session.add(ws)
     else:
         ws.message = message.text
+    await db_session.flush()
     await message.reply(_("welcome_set"))
     if state:
         await state.clear()
@@ -157,6 +158,7 @@ async def toggle_welcome(callback: CallbackQuery, _: callable, db_session: Async
         db_session.add(ws)
     else:
         ws.enabled = not ws.enabled
+    await db_session.flush()
     status = _("btn_enabled") if ws.enabled else _("btn_disabled")
     await callback.answer(f"{_('btn_welcome')}: {status}")
     text = _("welcome_menu")
