@@ -1,7 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
-from bot.utils.glass_panel import GLASS_TOP, GLASS_LINE, GLASS_BOT, ACCENT_GLOW, ACCENT_FROST
 from bot.keyboards.main_menu import back_button_kb
 import structlog
 
@@ -12,9 +11,7 @@ router = Router()
 def build_help_text(_: callable) -> str:
     """Build i18n help text using the _() callable."""
     return (
-        f"{ACCENT_GLOW} {GLASS_TOP}\n"
-        f"  ❓ <b>{_('help_center_title')}</b>\n"
-        f"{ACCENT_GLOW} {GLASS_LINE}\n\n"
+        f"  ❓ <b>{_('help_center_title')}</b>\n\n"
         f"  💰 <b>{_('help_section_economy')}</b>\n"
         f"  /wallet — {_('help_cmd_wallet')}\n"
         f"  /daily — {_('help_cmd_daily')}\n"
@@ -54,9 +51,7 @@ def build_help_text(_: callable) -> str:
         f"  ℹ️ <b>{_('help_section_other')}</b>\n"
         f"  /language — {_('help_cmd_language')}\n"
         f"  /stats — {_('help_cmd_stats')}\n"
-        f"  /help — {_('help_cmd_help')}\n\n"
-        f"{ACCENT_GLOW} {GLASS_BOT}\n"
-        f"{ACCENT_FROST} <i>{_('help_glass_hint')}</i>"
+        f"  /help — {_('help_cmd_help')}"
     )
 
 

@@ -9,7 +9,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.database.models import GroupSettings, WelcomeSettings
 from bot.keyboards.main_menu import nav_kb
 from bot.keyboards.settings import settings_menu_kb
-from bot.utils.glass_panel import glass_status, glass_lock_status
+
+def _status_icon(enabled: bool) -> str:
+    return "🟢" if enabled else "🔴"
+
 import structlog
 
 logger = structlog.get_logger()
@@ -50,7 +53,7 @@ class WelcomeStates(StatesGroup):
 
 def welcome_kb(_, enabled=True):
     builder = InlineKeyboardBuilder()
-    icon = glass_status(enabled)
+    icon = _status_icon(enabled)
     label = _("btn_enabled") if enabled else _("btn_disabled")
     builder.button(text=f"{icon} ◈ {label}", callback_data="welcome:toggle")
     builder.button(text=_("btn_welcome_set"),   callback_data="welcome:set")
@@ -64,7 +67,7 @@ def welcome_kb(_, enabled=True):
 
 def general_settings_kb(_, gs):
     builder = InlineKeyboardBuilder()
-    s = lambda v: glass_status(v)
+    s = lambda v: _status_icon(v)
     builder.button(text=f"{s(gs.economy_enabled)} ◈ {_('btn_economy_toggle')}", callback_data="gs:eco")
     builder.button(text=f"{s(gs.games_enabled)} ◈ {_('btn_games_toggle')}",     callback_data="gs:games")
     builder.button(text=f"{s(gs.xp_enabled)} ◈ {_('btn_xp_toggle')}",           callback_data="gs:xp")
@@ -231,7 +234,7 @@ async def log_events_menu(callback: CallbackQuery, _: callable, db_session: Asyn
         gs = GroupSettings(group_id=db_group.id)
         db_session.add(gs)
         await db_session.flush()
-    s = lambda v: glass_status(v)
+    s = lambda v: _status_icon(v)
     builder = InlineKeyboardBuilder()
     for txt, cb, field in [
         (f"{s(gs.log_join)} ◈ {_('log_join')}",     "log:join",   "log_join"),

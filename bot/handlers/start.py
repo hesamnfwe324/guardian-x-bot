@@ -99,17 +99,16 @@ async def menu_games(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:reputation")
 async def menu_reputation(callback: CallbackQuery, _: callable, db_session: AsyncSession = None, db_user=None, **kwargs):
-    from bot.utils.glass_panel import GLASS_TOP, GLASS_LINE, GLASS_BOT, ACCENT_GLOW
-    text = f"{ACCENT_GLOW} {GLASS_TOP}\n  {_('reputation_title')}\n{ACCENT_GLOW} {GLASS_LINE}\n\n"
+    text = f"  {_('reputation_title')}\n\n"
     if db_session and db_user:
         from sqlalchemy import select
         from bot.database.models import Reputation
         rep = await db_session.scalar(select(Reputation).where(Reputation.user_id == db_user.id))
         pos = rep.positive if rep else 0
         neg = rep.negative if rep else 0
-        text += f"  {_('rep_positive')}: <b>{pos}</b>\n  {_('rep_negative')}: <b>{neg}</b>\n  {_('rep_net')}: <b>{pos - neg}</b>\n\n{ACCENT_GLOW} {GLASS_BOT}"
+        text += f"  {_('rep_positive')}: <b>{pos}</b>\n  {_('rep_negative')}: <b>{neg}</b>\n  {_('rep_net')}: <b>{pos - neg}</b>"
     else:
-        text += f"  {_('no_data')}\n\n{ACCENT_GLOW} {GLASS_BOT}"
+        text += f"  {_('no_data')}"
     from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
     await callback.answer()
@@ -123,12 +122,7 @@ async def menu_language(callback: CallbackQuery, _: callable, **kwargs):
 
 @router.callback_query(F.data == "menu:channel")
 async def menu_channel(callback: CallbackQuery, _: callable, **kwargs):
-    from bot.utils.glass_panel import GLASS_TOP, GLASS_LINE, GLASS_BOT, ACCENT_GLOW
-    text = (
-        f"{ACCENT_GLOW} {GLASS_TOP}\n"
-        f"  {_('channel_info_text')}\n\n"
-        f"{ACCENT_GLOW} {GLASS_BOT}"
-    )
+    text = f"  {_('channel_info_text')}"
     from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=back_button_kb(_, 'menu:main'))
     await callback.answer()

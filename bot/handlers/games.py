@@ -58,8 +58,8 @@ async def play_dice(callback: CallbackQuery, _: callable, db_session=None, db_us
     p = dice_emoji[result['player_roll'] - 1]
     b = dice_emoji[result['opponent_roll'] - 1]
     text = (
-        f"🎲 <b>{_('dice_menu').split(chr(10))[0].replace('╗', '').replace('┌', '').strip()}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"🎲 <b>{_('dice_menu').split(chr(10))[0].strip()}</b>\n"
+        f"─────\n\n"
         f"{_('btn_game_dice')}: {p} <b>{result['player_roll']}</b>  vs  🤖: {b} <b>{result['opponent_roll']}</b>\n\n"
     )
     if result['result'] == 'win':
@@ -96,8 +96,8 @@ async def process_dice_bet(message: Message, _: callable, db_session=None, db_us
     p = dice_emoji[result['player_roll'] - 1]
     b = dice_emoji[result['opponent_roll'] - 1]
     text = (
-        f"🎲 <b>{_('dice_menu').split(chr(10))[0].replace('╗', '').replace('┌', '').strip()}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"🎲 <b>{_('dice_menu').split(chr(10))[0].strip()}</b>\n"
+        f"─────\n\n"
         f"{_('btn_game_dice')}: {p} <b>{result['player_roll']}</b>  vs  🤖: {b} <b>{result['opponent_roll']}</b>\n\n"
     )
     if result['result'] == 'win':
@@ -134,7 +134,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
         outcome = _('game_won').format(amount=chosen_mult)
     text = (
         f"🎡 <b>{_('btn_game_wheel')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{spin_animation}\n\n"
         f"{'🎯' if chosen_label != '💀' else '💀'} {chosen_label}\n\n"
         f"{outcome}"
@@ -146,7 +146,7 @@ async def cmd_wheel(message: Message, _: callable, db_session=None, db_user=None
 @router.message(Command('rps'))
 async def cmd_rps(message: Message, _: callable, **kwargs):
     await message.answer(
-        f"✊ <b>{_('btn_game_rps')}</b>\n━━━━━━━━━━━━\n\n{_('rps_choose')}",
+        f"✊ <b>{_('btn_game_rps')}</b>\n─────\n\n{_('rps_choose')}",
         parse_mode='HTML',
         reply_markup=rps_choice_kb(_, match_id=0),
     )
@@ -171,7 +171,7 @@ async def process_rps(callback: CallbackQuery, _: callable, db_session=None, db_
         outcome = _('game_draw')
     text = (
         f"✊ <b>{_('btn_game_rps')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"👤: {p_e}\n🤖: {b_e}\n\n"
         f"{outcome}"
     )
@@ -202,7 +202,7 @@ async def cmd_quiz(message: Message, _: callable, **kwargs):
         builder.button(text=opt, callback_data=f'quiz_ans:{correct}:{i}')
     builder.adjust(2, 2)
     await message.answer(
-        f"🧠 <b>{_('btn_game_quiz')}</b>\n━━━━━━━━━━━━\n\n{q_text}",
+        f"🧠 <b>{_('btn_game_quiz')}</b>\n─────\n\n{q_text}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )
@@ -247,7 +247,7 @@ async def cmd_numwar(message: Message, _: callable, db_session=None, db_user=Non
     b_bar = '█' * (bot_num // 10) + '░' * (10 - bot_num // 10)
     text = (
         f"🔢 <b>{_('btn_game_numwar')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"👤:  <b>{player_num}</b> [{p_bar}]\n"
         f"🤖: <b>{bot_num}</b> [{b_bar}]\n\n"
         f"{icon} {result_text}"
@@ -286,7 +286,7 @@ async def cmd_cards(message: Message, _: callable, db_session=None, db_user=None
         icon = '🤝'
     text = (
         f"🃏 <b>{_('btn_game_cards')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"👤:  {p_suit} <b>{p_rank}</b>\n"
         f"🤖: {b_suit} <b>{b_rank}</b>\n\n"
         f"{icon} {result_text}"
@@ -313,7 +313,7 @@ async def cmd_treasure(message: Message, _: callable, db_session=None, db_user=N
     reveal = ' '.join(spots[:5])
     text = (
         f"💎 <b>{_('btn_game_treasure')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{reveal}\n\n"
         f"{result_text}"
     )
@@ -342,7 +342,7 @@ async def cmd_mines(message: Message, _: callable, db_session=None, db_user=None
     row = ' '.join(display)
     text = (
         f"💣 <b>{_('btn_game_mines')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{row}\n\n"
         f"{result_text}"
     )
@@ -362,7 +362,7 @@ async def cmd_roulette(message: Message, _: callable, **kwargs):
     builder.button(text=_('roulette_zero').format(mult='35×'), callback_data='roulette:zero:0')
     builder.adjust(2, 1)
     await message.answer(
-        f"🎰 <b>{_('btn_game_roulette')}</b>\n━━━━━━━━━━━━\n\n{_('roulette_choose')}",
+        f"🎰 <b>{_('btn_game_roulette')}</b>\n─────\n\n{_('roulette_choose')}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )
@@ -393,7 +393,7 @@ async def process_roulette(callback: CallbackQuery, _: callable, db_session=None
         result_text = _('roulette_lose')
     text = (
         f"🎰 <b>{_('btn_game_roulette')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"🔮 {_('roulette_number')}: <b>{spin}</b> — {result_color}\n\n"
         f"{result_text}"
     )
@@ -413,7 +413,7 @@ async def cmd_stats(message: Message, _: callable, db_session=None, db_user=None
     draws = (stats.total_games or 0) - wins - losses
     text = (
         f"📊 <b>{_('game_stats_title')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"🏆 {_('wins_label')}: <b>{wins}</b>\n"
         f"💀 {_('losses_label')}: <b>{losses}</b>\n"
         f"🤝 {_('draws_label')}: <b>{max(0, draws)}</b>\n"
@@ -422,9 +422,9 @@ async def cmd_stats(message: Message, _: callable, db_session=None, db_user=None
     await message.answer(text, parse_mode='HTML')
 
 
-# ═══════════════════════════════════════════════════════════════
+# ─────
 # GAME MENU CALLBACK HANDLERS — Make inline buttons fully functional
-# ═══════════════════════════════════════════════════════════════
+# ─────
 
 @router.callback_query(F.data == "game:dice")
 async def game_dice(callback: CallbackQuery, _: callable, **kwargs):
@@ -440,7 +440,7 @@ async def game_quiz(callback: CallbackQuery, _: callable, **kwargs):
         builder.button(text=opt, callback_data=f'quiz_ans:{correct}:{i}')
     builder.adjust(2, 2)
     await callback.message.edit_text(
-        f"🧠 <b>{_('btn_game_quiz')}</b>\n━━━━━━━━━━━━\n\n{q_text}",
+        f"🧠 <b>{_('btn_game_quiz')}</b>\n─────\n\n{q_text}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )
@@ -465,7 +465,7 @@ async def game_treasure(callback: CallbackQuery, _: callable, db_session=None, d
     reveal = ' '.join(spots[:5])
     text = (
         f"💎 <b>{_('btn_game_treasure')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{reveal}\n\n"
         f"{result_text}"
     )
@@ -496,7 +496,7 @@ async def game_wheel(callback: CallbackQuery, _: callable, db_session=None, db_u
         outcome = _('game_won').format(amount=chosen_mult)
     text = (
         f"🎡 <b>{_('btn_game_wheel')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{spin_animation}\n\n"
         f"{'🎯' if chosen_label != '💀' else '💀'} {chosen_label}\n\n"
         f"{outcome}"
@@ -528,7 +528,7 @@ async def game_cards(callback: CallbackQuery, _: callable, db_session=None, db_u
         icon = '🤝'
     text = (
         f"🃏 <b>{_('btn_game_cards')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"👤:  {p_suit} <b>{p_rank}</b>\n"
         f"🤖: {b_suit} <b>{b_rank}</b>\n\n"
         f"{icon} {result_text}"
@@ -560,7 +560,7 @@ async def game_numwar(callback: CallbackQuery, _: callable, db_session=None, db_
     b_bar = '█' * (bot_num // 10) + '░' * (10 - bot_num // 10)
     text = (
         f"🔢 <b>{_('btn_game_numwar')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"👤:  <b>{player_num}</b> [{p_bar}]\n"
         f"🤖: <b>{bot_num}</b> [{b_bar}]\n\n"
         f"{icon} {result_text}"
@@ -573,7 +573,7 @@ async def game_numwar(callback: CallbackQuery, _: callable, db_session=None, db_
 @router.callback_query(F.data == "game:rps")
 async def game_rps(callback: CallbackQuery, _: callable, **kwargs):
     await callback.message.edit_text(
-        f"👊 <b>{_('btn_game_rps')}</b>\n━━━━━━━━━━━━\n\n{_('rps_choose')}",
+        f"👊 <b>{_('btn_game_rps')}</b>\n─────\n\n{_('rps_choose')}",
         parse_mode='HTML',
         reply_markup=rps_choice_kb(_, match_id=0),
     )
@@ -601,7 +601,7 @@ async def game_mines(callback: CallbackQuery, _: callable, db_session=None, db_u
     row = ' '.join(display)
     text = (
         f"💣 <b>{_('btn_game_mines')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{row}\n\n"
         f"{result_text}"
     )
@@ -614,7 +614,7 @@ async def game_mines(callback: CallbackQuery, _: callable, db_session=None, db_u
 async def game_chess(callback: CallbackQuery, _: callable, **kwargs):
     text = (
         f"♟️ <b>{_('btn_game_chess')}</b>\n"
-        f"━━━━━━━━━━━━\n\n"
+        f"─────\n\n"
         f"{_('feature_coming')}"
     )
     from bot.keyboards.main_menu import nav_kb
@@ -630,7 +630,7 @@ async def game_roulette(callback: CallbackQuery, _: callable, **kwargs):
     builder.button(text=_('roulette_zero').format(mult='35×'), callback_data='roulette:zero:0')
     builder.adjust(2, 1)
     await callback.message.edit_text(
-        f"🎰 <b>{_('btn_game_roulette')}</b>\n━━━━━━━━━━━━\n\n{_('roulette_choose')}",
+        f"🎰 <b>{_('btn_game_roulette')}</b>\n─────\n\n{_('roulette_choose')}",
         parse_mode='HTML',
         reply_markup=builder.as_markup(),
     )

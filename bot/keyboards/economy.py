@@ -4,7 +4,7 @@ from typing import Callable
 
 
 def economy_menu_kb(_: Callable) -> InlineKeyboardMarkup:
-    """Beautiful i18n economy menu with glass-styled buttons."""
+    """Beautiful i18n economy menu with buttons."""
     builder = InlineKeyboardBuilder()
     builder.button(text=_('btn_wallet'),       callback_data="eco:wallet")
     builder.button(text=_('btn_bank'),          callback_data="eco:bank")
