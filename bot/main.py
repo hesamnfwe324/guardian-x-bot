@@ -3,9 +3,12 @@ import os
 import traceback
 import structlog
 from aiohttp import web
+from pathlib import Path
 
 logger = structlog.get_logger()
 _last_error = None  # stores last crash reason, shown by /health
+
+PANEL_DIR = Path(__file__).resolve().parent.parent / "panel"
 
 
 async def health_handler(request):
@@ -19,11 +22,32 @@ async def health_handler(request):
     return web.Response(text='OK', status=200)
 
 
+async def panel_index_handler(request):
+    """Serve the glassmorphism admin panel."""
+    index_path = PANEL_DIR / "index.html"
+    if not index_path.exists():
+        return web.Response(text='Panel not found', status=404)
+    return web.FileResponse(index_path)
+
+
+async def panel_static_handler(request):
+    """Serve static files for the admin panel (CSS, JS, images)."""
+    filename = request.match_info.get('filename', '')
+    filepath = PANEL_DIR / filename
+    if not filepath.exists():
+        return web.Response(text='File not found', status=404)
+    return web.FileResponse(filepath)
+
+
 async def run_health_server():
     port = int(os.environ.get('PORT', 8080))
     app = web.Application()
     app.router.add_get('/health', health_handler)
     app.router.add_get('/', health_handler)
+
+    # Glassmorphism Admin Panel routes
+    app.router.add_get('/panel', panel_index_handler)
+    app.router.add_get('/panel/{filename}', panel_static_handler)
 
     try:
         from bot.admin_api import setup_admin_routes
