@@ -328,5 +328,6 @@
   "time_minutes": "минут",
   "loading": "⏳ Загрузка...",
   "no_data": "📭 Нет данных.",
-  "page_info": "Страница {page} из {total}"
+  "page_info": "Страница {page} из {total}",
+  "btn_support": "💬 Поддержка"
 }
