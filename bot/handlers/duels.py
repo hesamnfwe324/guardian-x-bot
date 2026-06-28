@@ -24,22 +24,26 @@ class DuelStates(StatesGroup):
 
 def duel_kb(duel_id: int, _: callable) -> object:
     builder = InlineKeyboardBuilder()
-    builder.button(text="⚔️ ◈ قبول", callback_data=f"duel_accept:{duel_id}")
-    builder.button(text="❌ ◈ رد", callback_data=f"duel_decline:{duel_id}")
+    builder.button(text=_("duel_accept_btn"), callback_data=f"duel_accept:{duel_id}")
+    builder.button(text=_("duel_decline_btn"), callback_data=f"duel_decline:{duel_id}")
     builder.adjust(2)
+    return builder.as_markup()
+
+
+def duels_menu_kb(_: callable) -> object:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("duel_new"),      callback_data="duel:new")
+    builder.button(text=_("duel_history"),  callback_data="duel:history")
+    builder.button(text=_("duel_stats"),    callback_data="duel:stats")
+    builder.button(text=_("duel_rankings"), callback_data="duel:rankings")
+    builder.button(text=_("btn_back"),      callback_data="menu:main")
+    builder.adjust(2, 2, 1)
     return builder.as_markup()
 
 
 @router.callback_query(F.data == "menu:duels")
 async def duels_menu(callback: CallbackQuery, _: callable, **kwargs):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="⚔️ ◈ دوئل جدید", callback_data="duel:new")
-    builder.button(text="📋 ◈ تاریخچه", callback_data="duel:history")
-    builder.button(text="📊 ◈ آمار", callback_data="duel:stats")
-    builder.button(text="🏆 ◈ رتبه‌بندی", callback_data="duel:rankings")
-    builder.button(text="🔙 ◈ بازگشت", callback_data="menu:main")
-    builder.adjust(2, 2, 1)
-    await callback.message.edit_text(_("duel_menu"), reply_markup=builder.as_markup(), parse_mode="HTML")
+    await callback.message.edit_text(_("duel_menu"), reply_markup=duels_menu_kb(_), parse_mode="HTML")
     await callback.answer()
 
 
@@ -189,6 +193,63 @@ async def duel_stats_view(callback: CallbackQuery, _: callable, db_session: Asyn
         f"💰 Coins Won: <b>{format_number(stats.coins_won or 0)}</b>\n"
         f"💸 Coins Lost: <b>{format_number(stats.coins_lost or 0)}</b>"
     )
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:duels"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "duel:history")
+async def duel_history_cb(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
+    if not db_user:
+        await callback.answer(_("error_generic"), show_alert=True)
+        return
+    text = _("no_duel_history")
+    try:
+        stmt = (
+            select(Duel)
+            .where(
+                (Duel.challenger_id == db_user.id) | (Duel.opponent_id == db_user.id),
+                Duel.status.in_(["finished", "declined"])
+            )
+            .order_by(Duel.id.desc())
+            .limit(10)
+        )
+        rows = (await db_session.execute(stmt)).scalars().all()
+        if rows:
+            text = _("duel_history_title") + "\n\n"
+            for d in rows:
+                result_icon = "🏆" if d.winner_id == db_user.id else ("🤝" if d.status == "draw" else "💔")
+                wager_str = format_number(d.wager or 0)
+                text += f"{result_icon} Wager: {wager_str} — {d.status}\n"
+    except Exception as e:
+        logger.warning("duel_history error", error=str(e))
+    from bot.keyboards.main_menu import back_button_kb
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:duels"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "duel:rankings")
+async def duel_rankings_cb(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+    text = _("no_data")
+    try:
+        from bot.database.models import DuelStats, User
+        from sqlalchemy import desc
+        stmt = (
+            select(User, DuelStats)
+            .join(DuelStats, DuelStats.user_id == User.id)
+            .order_by(desc(DuelStats.wins))
+            .limit(10)
+        )
+        rows = (await db_session.execute(stmt)).all()
+        medals = ["🥇", "🥈", "🥉"]
+        if rows:
+            text = _("duel_rankings_title") + "\n\n"
+            for i, (user, ds) in enumerate(rows, 1):
+                medal = medals[i - 1] if i <= 3 else f"{i}."
+                rate = int((ds.wins or 0) / ((ds.wins or 0) + (ds.losses or 0)) * 100) if (ds.wins or 0) + (ds.losses or 0) > 0 else 0
+                text += f"{medal} {safe_username(user)} — {ds.wins or 0}W / {ds.losses or 0}L ({rate}%)\n"
+    except Exception as e:
+        logger.warning("duel_rankings error", error=str(e))
+    from bot.keyboards.main_menu import back_button_kb
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "menu:duels"))
     await callback.answer()
 
