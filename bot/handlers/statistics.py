@@ -33,12 +33,13 @@ async def leaderboards_menu(callback: CallbackQuery, _: callable, **kwargs):
 @router.callback_query(F.data == "lb:richest")
 async def lb_richest(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
     top = await get_top_users_by_coins(db_session, limit=10)
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (user, wallet) in enumerate(top, 1):
         total = (wallet.balance or 0) + (wallet.bank_balance or 0)
         medal = medals[i-1] if i <= 3 else f"{i}."
-        lines_out.append(f"{medal} {safe_username(user)} — {format_number(total)} {_(\"coin_unit\")}")
+        coin = _('coin_unit')
+        lines_out.append(f'{medal} {safe_username(user)} — {format_number(total)} {coin}')
     text = _("lb_richest_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
@@ -47,11 +48,12 @@ async def lb_richest(callback: CallbackQuery, _: callable, db_session: AsyncSess
 @router.callback_query(F.data == "lb:levels")
 async def lb_levels(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
     top = await get_top_users_by_level(db_session, limit=10)
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (user, eco) in enumerate(top, 1):
         medal = medals[i-1] if i <= 3 else f"{i}."
-        lines_out.append(f"{medal} {safe_username(user)} — {_(\"level_label\")} {eco.level} ({format_number(eco.total_xp or 0)} XP)")
+        lbl = _('level_label')
+        lines_out.append(f'{medal} {safe_username(user)} — {lbl} {eco.level} ({format_number(eco.total_xp or 0)} XP)')
     text = _("lb_levels_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
@@ -60,12 +62,12 @@ async def lb_levels(callback: CallbackQuery, _: callable, db_session: AsyncSessi
 @router.callback_query(F.data == "lb:rep")
 async def lb_rep(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
     top = await get_top_reputation(db_session, limit=10)
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (user, rep) in enumerate(top, 1):
         medal = medals[i-1] if i <= 3 else f"{i}."
         score = (rep.positive or 0) - (rep.negative or 0)
-        lines_out.append(f"{medal} {safe_username(user)} — +{rep.positive or 0}/-{rep.negative or 0} (net: {score})")
+        lines_out.append(f'{medal} {safe_username(user)} — +{rep.positive or 0}/-{rep.negative or 0} (net: {score})')
     text = _("lb_rep_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
@@ -75,12 +77,12 @@ async def lb_rep(callback: CallbackQuery, _: callable, db_session: AsyncSession,
 async def lb_wins(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
     stmt = select(User, DuelStats).join(DuelStats, DuelStats.user_id == User.id).order_by(desc(DuelStats.wins)).limit(10)
     rows = (await db_session.execute(stmt)).all()
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (user, ds) in enumerate(rows, 1):
         medal = medals[i-1] if i <= 3 else f"{i}."
         wr = int(ds.wins / max(ds.wins + ds.losses, 1) * 100)
-        lines_out.append(f"{medal} {safe_username(user)} — {ds.wins}W/{ds.losses}L ({wr}% WR)")
+        lines_out.append(f'{medal} {safe_username(user)} — {ds.wins}W/{ds.losses}L ({wr}% WR)')
     text = _("lb_wins_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
@@ -90,11 +92,11 @@ async def lb_wins(callback: CallbackQuery, _: callable, db_session: AsyncSession
 async def lb_players(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
     stmt = select(User, Economy).join(Economy, Economy.user_id == User.id).order_by(desc(Economy.xp)).limit(10)
     rows = (await db_session.execute(stmt)).all()
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (user, eco) in enumerate(rows, 1):
         medal = medals[i-1] if i <= 3 else f"{i}."
-        lines_out.append(f"{medal} {safe_username(user)} — {format_number(eco.xp or 0)} XP")
+        lines_out.append(f'{medal} {safe_username(user)} — {format_number(eco.xp or 0)} XP')
     text = _("lb_players_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
@@ -140,11 +142,12 @@ async def active_members(callback: CallbackQuery, _: callable, db_session: Async
     stmt = select(GroupMember, User).join(User, User.id == GroupMember.user_id).where(
         GroupMember.group_id == chat.id).order_by(desc(GroupMember.message_count)).limit(10)
     rows = (await db_session.execute(stmt)).all()
-    medals = ["U0001f947","U0001f948","U0001f949"]
+    medals = ['U0001f947','U0001f948','U0001f949']
     lines_out = []
     for i, (gm, user) in enumerate(rows, 1):
         medal = medals[i-1] if i <= 3 else f"{i}."
-        lines_out.append(f"{medal} {safe_username(user)} — {format_number(gm.message_count)} {_(\"msg_unit\")}")
+        msg_unit = _('msg_unit')
+        lines_out.append(f'{medal} {safe_username(user)} — {format_number(gm.message_count)} {msg_unit}')
     text = _("active_members_title") + "\n\n" + ("\n".join(lines_out) if lines_out else _("no_data"))
     await callback.message.edit_text(text, parse_mode="HTML")
     await callback.answer()
