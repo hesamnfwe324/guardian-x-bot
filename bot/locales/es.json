@@ -328,5 +328,6 @@
   "time_minutes": "minutos",
   "loading": "⏳ Cargando...",
   "no_data": "📭 Sin datos.",
-  "page_info": "Página {page} de {total}"
+  "page_info": "Página {page} de {total}",
+  "btn_support": "💬 Soporte"
 }
