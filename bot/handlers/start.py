@@ -1,7 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot.keyboards.main_menu import language_selection_kb, main_menu_kb
 from bot.config import settings
@@ -15,22 +14,6 @@ router = Router()
 @router.message(CommandStart())
 async def cmd_start(message: Message, _: callable, db_session: AsyncSession = None, db_user=None, lang: str = "en"):
     if message.chat.type != "private":
-        try:
-            bot_info = await message.bot.get_me()
-            bot_username = bot_info.username
-        except Exception:
-            bot_username = "GuardianXBot"
-        builder = InlineKeyboardBuilder()
-        builder.button(
-            text="🤖 باز کردن پنل ربات" if lang == "fa" else "🤖 Open Bot Panel",
-            url=f"https://t.me/{bot_username}?start=from_group"
-        )
-        group_text = (
-            "👋 برای مشاهده پنل کامل ربات، روی دکمه زیر کلیک کنید:"
-            if lang == "fa"
-            else "👋 Click the button below to open the bot panel in private chat:"
-        )
-        await message.answer(group_text, reply_markup=builder.as_markup())
         return
 
     if db_session and db_user:
@@ -58,11 +41,13 @@ async def set_language(callback: CallbackQuery, db_session: AsyncSession = None,
             await callback.answer(_("error_generic") if _ else "Invalid language", show_alert=True)
         return
 
+    # ذخیره مستقیم زبان با ORM (بدون raw SQL)
     if db_session and db_user:
         db_user.language = selected_lang
         await db_session.flush()
 
     new_ = lambda key, **kw: get_text(selected_lang, key, **kw)
+
     name = callback.from_user.first_name or "کاربر"
     welcome_text = new_("welcome_bot").replace("{name}", name) if "{name}" in new_("welcome_bot") else new_("welcome_bot")
 
@@ -104,9 +89,13 @@ async def change_language(callback: CallbackQuery, _: callable, **kwargs):
 async def channel_info(callback: CallbackQuery, _: callable, **kwargs):
     from bot.keyboards.main_menu import back_button_kb
     text = (
-        "📢 <b>کانال رسمی گاردیان X</b>\n\nآخرین اخبار، بروزرسانی‌ها و اطلاعیه‌ها را دنبال کنید!\n\n🔔 همین الان عضو شوید: @VPS24H"
-        if kwargs.get("lang") == "fa" else
-        "📢 <b>Official Channel</b>\n\nFollow us for the latest news and updates!\n\n🔔 Join now: @VPS24H"
+        "📢 <b>کانال رسمی گاردیان X</b>\n\n"
+        "آخرین اخبار، بروزرسانی‌ها و اطلاعیه‌ها را دنبال کنید!\n\n"
+        "🔔 همین الان عضو شوید: @VPS24H"
+    ) if kwargs.get("lang") == "fa" else (
+        "📢 <b>Official Channel</b>\n\n"
+        "Follow us for the latest news and updates!\n\n"
+        "🔔 Join now: @VPS24H"
     )
     await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
     await callback.answer()
@@ -116,9 +105,19 @@ async def channel_info(callback: CallbackQuery, _: callable, **kwargs):
 async def tournaments_menu(callback: CallbackQuery, _: callable, **kwargs):
     from bot.keyboards.main_menu import back_button_kb
     text = (
-        "🏆 <b>تورنمنت‌ها</b>\n\n🚧 <b>به زودی!</b>\n\nبا گروه‌های دیگر رقابت کنید!\n• 🎮 تورنمنت بازی‌ها\n• ⚔️ قهرمانی مبارزه\n• 🏅 جوایز و پاداش‌ها"
-        if kwargs.get("lang") == "fa" else
-        "🏆 <b>Tournaments</b>\n\n🚧 <b>Coming Soon!</b>\n\nCompete with other groups!\n• 🎮 Game tournaments\n• ⚔️ Duel championships\n• 🏅 Prize pools & rewards"
+        "🏆 <b>تورنمنت‌ها</b>\n\n"
+        "🚧 <b>به زودی!</b>\n\n"
+        "با گروه‌های دیگر رقابت کنید!\n"
+        "• 🎮 تورنمنت بازی‌ها\n"
+        "• ⚔️ قهرمانی مبارزه\n"
+        "• 🏅 جوایز و پاداش‌ها"
+    ) if kwargs.get("lang") == "fa" else (
+        "🏆 <b>Tournaments</b>\n\n"
+        "🚧 <b>Coming Soon!</b>\n\n"
+        "Compete with other groups!\n"
+        "• 🎮 Game tournaments\n"
+        "• ⚔️ Duel championships\n"
+        "• 🏅 Prize pools & rewards"
     )
     await callback.message.edit_text(text, reply_markup=back_button_kb(_), parse_mode="HTML")
     await callback.answer()
