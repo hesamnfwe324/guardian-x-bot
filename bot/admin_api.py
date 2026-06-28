@@ -6,9 +6,16 @@ from sqlalchemy import select, func, and_, or_, desc, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.database.models import User, Group, GroupMember, Wallet, Economy, ActionLog
-from bot.database.connection import async_session_maker
 
 ADMIN_KEY = os.environ.get("ADMIN_KEY", "")
+
+# Lazy accessor — avoids importing async_session_maker at module-load time
+# so the bot can start even when DATABASE_URL is not yet available.
+def __getattr__(name):
+    if name == "async_session_maker":
+        from bot.database.connection import async_session_maker as _sm
+        return _sm
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def require_admin(handler):

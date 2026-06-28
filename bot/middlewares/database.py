@@ -3,7 +3,6 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Message, CallbackQuery, Update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from bot.database.connection import async_session_maker
 from bot.database.models import User, Group, GroupMember, SecuritySettings
 import structlog
 
@@ -17,6 +16,7 @@ class DatabaseMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
+        from bot.database.connection import async_session_maker
         _db_ready = False
         try:
             async with async_session_maker() as session:
