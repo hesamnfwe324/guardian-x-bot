@@ -328,5 +328,6 @@
   "time_minutes": "dakika",
   "loading": "⏳ Yükleniyor...",
   "no_data": "📭 Veri yok.",
-  "page_info": "Sayfa {page} / {total}"
+  "page_info": "Sayfa {page} / {total}",
+  "btn_support": "💬 Destek"
 }
