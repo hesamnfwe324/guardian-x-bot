@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
-from aiogram.filters import Command
+from aiogram.filters import Command, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,23 @@ import structlog
 
 logger = structlog.get_logger()
 router = Router()
+
+
+# ─── /settings ────────────────────────────────────────────
+@router.message(Command('settings'))
+async def cmd_settings(message: Message, _: callable, **kwargs):
+    if message.chat.type == 'private':
+        await message.answer(_('error_admin_only'))
+        return
+    try:
+        member = await message.bot.get_chat_member(message.chat.id, message.from_user.id)
+        if member.status not in ('administrator', 'creator'):
+            await message.answer(_('error_admin_only'))
+            return
+    except Exception:
+        return
+    from bot.keyboards.settings import settings_menu_kb
+    await message.answer(_('settings_menu_title'), reply_markup=settings_menu_kb(_), parse_mode='HTML')
 
 
 class WelcomeStates(StatesGroup):
@@ -70,18 +87,6 @@ def slowmode_kb(_):
     builder.button(text=_("btn_home"), callback_data="menu:main")
     builder.adjust(4, 3, 2)
     return builder.as_markup()
-
-
-@router.callback_query(F.data == "menu:settings")
-async def settings_menu(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text(_("settings_menu"), reply_markup=settings_kb(_), parse_mode="HTML")
-    await callback.answer()
-
-
-@router.callback_query(F.data == "settings:menu")
-async def settings_menu_back(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text(_("settings_menu"), reply_markup=settings_kb(_), parse_mode="HTML")
-    await callback.answer()
 
 
 @router.callback_query(F.data == "settings:welcome")
