@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import Callable
-from bot.utils.glass_panel import glass_status, glass_lock_status
 
 
 # Language flag emoji map

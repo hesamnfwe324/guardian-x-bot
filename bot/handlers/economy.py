@@ -215,9 +215,9 @@ async def cmd_transactions(message: Message, _: callable, db_session: AsyncSessi
     await message.reply(text, parse_mode='HTML')
 
 
-# ═══════════════════════════════════════════════════════════════════
+# ─────
 # ECONOMY CALLBACK HANDLERS — Make inline buttons fully functional
-# ═══════════════════════════════════════════════════════════════════
+# ─────
 
 @router.callback_query(F.data == "eco:wallet")
 async def eco_wallet(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
