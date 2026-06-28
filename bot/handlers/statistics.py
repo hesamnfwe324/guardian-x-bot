@@ -1,203 +1,217 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
-from aiogram.filters import Command
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from bot.database.models import GroupMember, User, Economy, Wallet, DuelStats, Reputation
-from bot.services.user_service import get_top_users_by_level, get_top_users_by_coins, get_top_reputation
-from bot.keyboards.main_menu import back_button_kb
-from bot.utils.helpers import format_number, safe_username, progress_bar, calculate_level
-import structlog
+  from aiogram.types import CallbackQuery
+  from sqlalchemy.ext.asyncio import AsyncSession
+  from sqlalchemy import select, func, desc
+  from aiogram.utils.keyboard import InlineKeyboardBuilder
+  from bot.database.models import GroupMember, User, Economy, Wallet, DuelStats, Reputation, ActionLog, Group
+  from bot.services.user_service import get_top_users_by_level, get_top_users_by_coins, get_top_reputation
+  from bot.keyboards.main_menu import nav_kb
+  from bot.utils.helpers import format_number, safe_username, progress_bar
+  import structlog
+  from datetime import datetime, timezone, timedelta
 
-logger = structlog.get_logger()
-router = Router()
-
-
-def stats_menu_kb(_) -> object:
-    builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_leaderboards"), callback_data="stats:leaderboards")
-    builder.button(text=_("btn_active_members"), callback_data="stats:active")
-    builder.button(text=_("btn_group_growth"), callback_data="stats:growth")
-    builder.button(text=_("btn_daily_stats"), callback_data="stats:daily")
-    builder.button(text=_("btn_back"), callback_data="menu:main")
-    builder.adjust(2, 2, 1)
-    return builder.as_markup()
+  logger = structlog.get_logger()
+  router = Router()
 
 
-def leaderboard_kb(_) -> object:
-    builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_richest"), callback_data="lb:richest")
-    builder.button(text=_("btn_top_levels"), callback_data="lb:levels")
-    builder.button(text=_("btn_best_players"), callback_data="lb:players")
-    builder.button(text=_("btn_most_wins"), callback_data="lb:wins")
-    builder.button(text=_("btn_top_rep"), callback_data="lb:rep")
-    builder.button(text=_("btn_back"), callback_data="stats:menu")
-    builder.adjust(2, 2, 1, 1)
-    return builder.as_markup()
+  def stats_menu_kb(_):
+      builder = InlineKeyboardBuilder()
+      builder.button(text=_("btn_leaderboards"),  callback_data="stats:leaderboards")
+      builder.button(text=_("btn_active_members"), callback_data="stats:active")
+      builder.button(text=_("btn_group_growth"),  callback_data="stats:growth")
+      builder.button(text=_("btn_daily_stats"),   callback_data="stats:daily")
+      builder.button(text=_("btn_my_stats"),      callback_data="stats:mine")
+      builder.button(text=_("btn_back"),          callback_data="menu:main")
+      builder.button(text=_("btn_home"),          callback_data="menu:main")
+      builder.adjust(2, 2, 1, 2)
+      return builder.as_markup()
 
 
-@router.callback_query(F.data == "menu:statistics")
-async def stats_menu(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text(_("stats_menu"), reply_markup=stats_menu_kb(_), parse_mode="HTML")
-    await callback.answer()
+  def leaderboard_kb(_):
+      builder = InlineKeyboardBuilder()
+      builder.button(text=_("btn_richest"),      callback_data="lb:richest")
+      builder.button(text=_("btn_top_levels"),   callback_data="lb:levels")
+      builder.button(text=_("btn_best_players"), callback_data="lb:players")
+      builder.button(text=_("btn_most_wins"),    callback_data="lb:wins")
+      builder.button(text=_("btn_top_rep"),      callback_data="lb:rep")
+      builder.button(text=_("btn_back"),         callback_data="stats:menu")
+      builder.button(text=_("btn_home"),         callback_data="menu:main")
+      builder.adjust(2, 2, 1, 2)
+      return builder.as_markup()
 
 
-@router.callback_query(F.data == "stats:menu")
-async def stats_menu_back(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text(_("stats_menu"), reply_markup=stats_menu_kb(_), parse_mode="HTML")
-    await callback.answer()
+  @router.callback_query(F.data == "menu:statistics")
+  async def stats_menu(callback: CallbackQuery, _: callable, **kwargs):
+      await callback.message.edit_text(_("stats_menu"), reply_markup=stats_menu_kb(_), parse_mode="HTML")
+      await callback.answer()
 
 
-@router.callback_query(F.data == "stats:leaderboards")
-async def leaderboards_menu(callback: CallbackQuery, _: callable, **kwargs):
-    await callback.message.edit_text("🏆 <b>Leaderboards</b>", reply_markup=leaderboard_kb(_), parse_mode="HTML")
-    await callback.answer()
+  @router.callback_query(F.data == "stats:menu")
+  async def stats_menu_back(callback: CallbackQuery, _: callable, **kwargs):
+      await callback.message.edit_text(_("stats_menu"), reply_markup=stats_menu_kb(_), parse_mode="HTML")
+      await callback.answer()
 
 
-@router.callback_query(F.data == "lb:richest")
-async def lb_richest(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    top = await get_top_users_by_coins(db_session, limit=10)
-    text = "💰 <b>Richest Users</b>\n\n"
-    for i, (user, wallet) in enumerate(top, 1):
-        total = (wallet.balance or 0) + (wallet.bank_balance or 0)
-        text += f"{i}. {safe_username(user)} — {format_number(total)} coins\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:leaderboards"))
-    await callback.answer()
+  @router.callback_query(F.data == "stats:leaderboards")
+  async def leaderboards_menu(callback: CallbackQuery, _: callable, **kwargs):
+      await callback.message.edit_text(_("leaderboards_title"), reply_markup=leaderboard_kb(_), parse_mode="HTML")
+      await callback.answer()
 
 
-@router.callback_query(F.data == "lb:levels")
-async def lb_levels(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    top = await get_top_users_by_level(db_session, limit=10)
-    text = "⭐ <b>Highest Levels</b>\n\n"
-    for i, (user, eco) in enumerate(top, 1):
-        text += f"{i}. {safe_username(user)} — Level {eco.level} ({format_number(eco.total_xp or 0)} XP)\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:leaderboards"))
-    await callback.answer()
+  @router.callback_query(F.data == "lb:richest")
+  async def lb_richest(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      top = await get_top_users_by_coins(db_session, limit=10)
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (user, wallet) in enumerate(top, 1):
+          total = (wallet.balance or 0) + (wallet.bank_balance or 0)
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          lines.append(f"{medal} {safe_username(user)} — {format_number(total)} {_('coin_unit')}")
+      text = _("lb_richest_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:leaderboards", "lb:richest"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "lb:rep")
-async def lb_rep(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    top = await get_top_reputation(db_session, limit=10)
-    text = "🌟 <b>Top Reputation</b>\n\n"
-    for i, (user, rep) in enumerate(top, 1):
-        text += f"{i}. {safe_username(user)} — +{rep.positive or 0} / -{rep.negative or 0}\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:leaderboards"))
-    await callback.answer()
+  @router.callback_query(F.data == "lb:levels")
+  async def lb_levels(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      top = await get_top_users_by_level(db_session, limit=10)
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (user, eco) in enumerate(top, 1):
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          lines.append(f"{medal} {safe_username(user)} — {_('level_label')} {eco.level} ({format_number(eco.total_xp or 0)} XP)")
+      text = _("lb_levels_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:leaderboards", "lb:levels"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "lb:wins")
-async def lb_wins(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    result = await db_session.execute(
-        select(User, DuelStats)
-        .join(DuelStats, DuelStats.user_id == User.id)
-        .order_by(desc(DuelStats.wins))
-        .limit(10)
-    )
-    top = result.all()
-    text = "🏆 <b>Most Wins</b>\n\n"
-    for i, (user, stats) in enumerate(top, 1):
-        text += f"{i}. {safe_username(user)} — {stats.wins or 0} wins\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:leaderboards"))
-    await callback.answer()
+  @router.callback_query(F.data == "lb:rep")
+  async def lb_rep(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      top = await get_top_reputation(db_session, limit=10)
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (user, rep) in enumerate(top, 1):
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          score = (rep.positive or 0) - (rep.negative or 0)
+          lines.append(f"{medal} {safe_username(user)} — +{rep.positive or 0}/-{rep.negative or 0} (net: {score})")
+      text = _("lb_rep_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:leaderboards", "lb:rep"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "lb:players")
-async def lb_players(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    from bot.database.models import GameStats
-    result = await db_session.execute(
-        select(User, GameStats)
-        .join(GameStats, GameStats.user_id == User.id)
-        .order_by(desc(GameStats.total_wins))
-        .limit(10)
-    )
-    top = result.all()
-    text = "🎮 <b>Best Players</b>\n\n"
-    for i, (user, stats) in enumerate(top, 1):
-        text += f"{i}. {safe_username(user)} — {stats.total_wins or 0} game wins\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:leaderboards"))
-    await callback.answer()
+  @router.callback_query(F.data == "lb:wins")
+  async def lb_wins(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      stmt = select(User, DuelStats).join(DuelStats, DuelStats.user_id == User.id).order_by(desc(DuelStats.wins)).limit(10)
+      rows = (await db_session.execute(stmt)).all()
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (user, ds) in enumerate(rows, 1):
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          wr = int(ds.wins / max(ds.wins + ds.losses, 1) * 100)
+          lines.append(f"{medal} {safe_username(user)} — {ds.wins}W/{ds.losses}L ({wr}% WR)")
+      text = _("lb_wins_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:leaderboards", "lb:wins"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "stats:active")
-async def active_members(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_group, **kwargs):
-    if not db_group:
-        await callback.answer(_("error_group_only"), show_alert=True)
-        return
-    result = await db_session.execute(
-        select(User, GroupMember)
-        .join(GroupMember, GroupMember.user_id == User.id)
-        .where(GroupMember.group_id == db_group.id)
-        .order_by(desc(GroupMember.message_count))
-        .limit(10)
-    )
-    top = result.all()
-    text = f"👥 <b>Most Active in {db_group.title}</b>\n\n"
-    for i, (user, member) in enumerate(top, 1):
-        text += f"{i}. {safe_username(user)} — {format_number(member.message_count or 0)} messages\n"
-    if not top:
-        text += _("no_data")
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:menu"))
-    await callback.answer()
+  @router.callback_query(F.data == "lb:players")
+  async def lb_players(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      stmt = select(User, Economy).join(Economy, Economy.user_id == User.id).order_by(desc(Economy.xp)).limit(10)
+      rows = (await db_session.execute(stmt)).all()
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (user, eco) in enumerate(rows, 1):
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          lines.append(f"{medal} {safe_username(user)} — {format_number(eco.xp or 0)} XP")
+      text = _("lb_players_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:leaderboards", "lb:players"))
+      await callback.answer()
 
 
-@router.callback_query(F.data.in_({"stats:growth", "stats:daily", "stats:weekly", "stats:monthly"}))
-async def generic_stats(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
-    result = await db_session.execute(select(func.count()).select_from(User))
-    total_users = result.scalar() or 0
-    from bot.database.models import Group
-    result2 = await db_session.execute(select(func.count()).select_from(Group))
-    total_groups = result2.scalar() or 0
-    text = (
-        "📊 <b>Global Statistics</b>\n\n"
-        + _("total_users").format(count=format_number(total_users)) + "\n"
-        + _("total_groups").format(count=format_number(total_groups))
-    )
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=back_button_kb(_, "stats:menu"))
-    await callback.answer()
+  @router.callback_query(F.data == "stats:mine")
+  async def my_stats(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
+      if not db_user:
+          await callback.answer(_("error_generic"), show_alert=True)
+          return
+      wallet = await db_session.scalar(select(Wallet).where(Wallet.user_id == db_user.id))
+      eco = await db_session.scalar(select(Economy).where(Economy.user_id == db_user.id))
+      rep = await db_session.scalar(select(Reputation).where(Reputation.user_id == db_user.id))
+      ds = await db_session.scalar(select(DuelStats).where(DuelStats.user_id == db_user.id))
+      balance = (wallet.balance if wallet else 0) or 0
+      bank = (wallet.bank_balance if wallet else 0) or 0
+      level = (eco.level if eco else 1) or 1
+      xp = (eco.xp if eco else 0) or 0
+      total_xp = (eco.total_xp if eco else 0) or 0
+      pos_rep = (rep.positive if rep else 0) or 0
+      neg_rep = (rep.negative if rep else 0) or 0
+      wins = (ds.wins if ds else 0) or 0
+      losses = (ds.losses if ds else 0) or 0
+      xp_needed = level * 100
+      bar = progress_bar(xp, xp_needed) if xp_needed else "─" * 10
+      wr = int(wins / max(wins + losses, 1) * 100)
+      name = db_user.first_name or safe_username(db_user)
+      text = _("my_stats_text").format(
+          name=name, level=level, xp=format_number(xp), xp_needed=format_number(xp_needed),
+          bar=bar, total_xp=format_number(total_xp), balance=format_number(balance),
+          bank=format_number(bank), pos_rep=pos_rep, neg_rep=neg_rep, wins=wins, losses=losses, winrate=wr,
+      )
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:menu", "stats:mine"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "menu:levels")
-async def levels_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
-    from bot.services.user_service import get_or_create_economy
-    eco = await get_or_create_economy(db_session, db_user.id)
-    level, current_xp, needed_xp = calculate_level(eco.total_xp or 0)
-    bar = progress_bar(current_xp, needed_xp)
-    text = (
-        _("level_menu") + "\n\n"
-        + _("your_level").format(level=level) + "\n"
-        + _("your_xp").format(xp=format_number(current_xp), next_xp=format_number(needed_xp)) + "\n"
-        + _("level_progress").format(bar=bar)
-    )
-    builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_leaderboard"), callback_data="lb:levels")
-    builder.button(text=_("btn_back"), callback_data="menu:main")
-    builder.adjust(2)
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=builder.as_markup())
-    await callback.answer()
+  @router.callback_query(F.data == "stats:active")
+  async def active_members(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      chat = callback.message.chat
+      if chat.type not in ("group", "supergroup"):
+          await callback.answer(_("error_group_only"), show_alert=True)
+          return
+      stmt = select(GroupMember, User).join(User, User.id == GroupMember.user_id).where(
+          GroupMember.group_id == chat.id).order_by(desc(GroupMember.message_count)).limit(10)
+      rows = (await db_session.execute(stmt)).all()
+      medals = ["🥇","🥈","🥉"]
+      lines = []
+      for i, (gm, user) in enumerate(rows, 1):
+          medal = medals[i-1] if i <= 3 else f"{i}."
+          lines.append(f"{medal} {safe_username(user)} — {format_number(gm.message_count)} {_('msg_unit')}")
+      text = _("active_members_title") + "\n\n" + ("\n".join(lines) if lines else _("no_data"))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:menu", "stats:active"))
+      await callback.answer()
 
 
-@router.callback_query(F.data == "menu:reputation")
-async def reputation_menu(callback: CallbackQuery, _: callable, db_session: AsyncSession, db_user, **kwargs):
-    from bot.services.user_service import get_or_create_reputation
-    rep = await get_or_create_reputation(db_session, db_user.id)
-    text = (
-        _("reputation_menu") + "\n\n"
-        + _("your_rep").format(pos=rep.positive or 0, neg=rep.negative or 0)
-    )
-    builder = InlineKeyboardBuilder()
-    builder.button(text=_("btn_rep_rankings"), callback_data="lb:rep")
-    builder.button(text=_("btn_back"), callback_data="menu:main")
-    builder.adjust(2)
-    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=builder.as_markup())
-    await callback.answer()
+  @router.callback_query(F.data == "stats:daily")
+  async def daily_stats(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      now = datetime.now(timezone.utc)
+      day_ago = now - timedelta(hours=24)
+      total_users = await db_session.scalar(select(func.count(User.id)))
+      new_users = await db_session.scalar(select(func.count(User.id)).where(User.created_at >= day_ago))
+      total_actions = await db_session.scalar(select(func.count(ActionLog.id)).where(ActionLog.created_at >= day_ago))
+      text = _("daily_stats_text").format(
+          total_users=format_number(total_users or 0),
+          new_users=format_number(new_users or 0),
+          actions=format_number(total_actions or 0),
+      )
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:menu", "stats:daily"))
+      await callback.answer()
+
+
+  @router.callback_query(F.data == "stats:growth")
+  async def group_growth(callback: CallbackQuery, _: callable, db_session: AsyncSession, **kwargs):
+      chat = callback.message.chat
+      if chat.type in ("group", "supergroup"):
+          total_members = await db_session.scalar(select(func.count(GroupMember.id)).where(GroupMember.group_id == chat.id))
+          try:
+              chat_obj = await callback.bot.get_chat(chat.id)
+              member_count = chat_obj.member_count or total_members
+          except Exception:
+              member_count = total_members
+          text = _("group_growth_text").format(title=chat.title or "Group", members=format_number(member_count or 0), db_members=format_number(total_members or 0))
+      else:
+          now = datetime.now(timezone.utc)
+          week_ago = now - timedelta(days=7)
+          total_groups = await db_session.scalar(select(func.count(Group.id)))
+          new_groups = await db_session.scalar(select(func.count(Group.id)).where(Group.created_at >= week_ago))
+          total_members = await db_session.scalar(select(func.count(GroupMember.id)))
+          text = _("global_growth_text").format(total_groups=format_number(total_groups or 0), new_groups=format_number(new_groups or 0), total_members=format_number(total_members or 0))
+      await callback.message.edit_text(text, parse_mode="HTML", reply_markup=nav_kb(_, "stats:menu", "stats:growth"))
+      await callback.answer()
+  
