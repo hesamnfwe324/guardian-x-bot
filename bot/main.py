@@ -13,6 +13,7 @@ from bot.middlewares import I18nMiddleware, DatabaseMiddleware, load_translation
 from bot.database.connection import create_tables, close_db
 from bot.handlers import get_main_router
 from bot.services.achievement_service import seed_achievements
+from bot.admin_api import setup_admin_routes
 
 logger = structlog.get_logger()
 
@@ -26,6 +27,7 @@ async def run_health_server():
     app = web.Application()
     app.router.add_get("/health", health_handler)
     app.router.add_get("/", health_handler)
+    setup_admin_routes(app)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", port, reuse_port=True)
