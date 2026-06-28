@@ -128,7 +128,7 @@ import asyncio
       from aiogram.enums import ParseMode
       from aiogram.fsm.storage.memory import MemoryStorage
       from bot.handlers import get_main_router
-      from bot.middlewares import DatabaseMiddleware, I18nMiddleware
+      from bot.middlewares import DatabaseMiddleware, I18nMiddleware, CallbackLoggingMiddleware
 
       storage = MemoryStorage()
       bot = Bot(
@@ -138,8 +138,14 @@ import asyncio
       dp = Dispatcher(storage=storage)
 
       dp.include_router(get_main_router())
-      dp.update.outer_middleware(DatabaseMiddleware())
-      dp.update.outer_middleware(I18nMiddleware())
+
+      # IMPORTANT: Middleware registration order matters in aiogram 3.
+      # outer_middleware uses a LIFO stack — last registered runs FIRST.
+      # Desired execution order: CallbackLogging → Database → I18n → handler
+      # So we register in reverse: I18n first, then Database, then CallbackLogging last.
+      dp.update.outer_middleware(I18nMiddleware())        # registered 1st → runs LAST (closest to handler)
+      dp.update.outer_middleware(DatabaseMiddleware())    # registered 2nd → runs SECOND (provides db_user to I18n)
+      dp.update.outer_middleware(CallbackLoggingMiddleware())  # registered 3rd → runs FIRST (logs raw button press)
 
       await on_startup(bot)
 
